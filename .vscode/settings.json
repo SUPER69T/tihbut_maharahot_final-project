@@ -1,0 +1,9 @@
+{
+  "clangd.path": "clangd",
+  "clangd.arguments": ["--background-index"],
+  "C_Cpp.intelliSenseEngine": "Disabled",
+  "files.associations": {
+    "*.h": "cpp"
+  },
+  "editor.semanticHighlighting.enabled": true
+}
