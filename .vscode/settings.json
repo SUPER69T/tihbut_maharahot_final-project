@@ -1,7 +1,7 @@
 {
-  "clangd.path": "clangd",
-  "clangd.arguments": ["--background-index"],
-  "C_Cpp.intelliSenseEngine": "Disabled",
+  //"clangd.path": "C:\\Program Files\\Clang\\clangd-windows-21.1.8\\clangd_21.1.8\\bin\\clangd.exe",
+  //"clangd.arguments": ["--background-index"],
+  //"C_Cpp.intelliSenseEngine": "disabled",
   "files.associations": {
     "*.h": "cpp"
   },
