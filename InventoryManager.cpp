@@ -35,7 +35,9 @@ void InventoryManager::returnItem(int itemId, const std::string& username){
 }
 
 void InventoryManager::waitUntilAvailable(int itemId, const std::string& username){
+void InventoryManager::waitUntilAvailable(int itemId, const std::string& username){
 
+}
 }
 
 Item& InventoryManager::findItemById(int itemId){
@@ -49,4 +51,5 @@ Item& InventoryManager::findItemById(int itemId){
     throw std::invalid_argument("Item not found.");
     }
 }
+
         
