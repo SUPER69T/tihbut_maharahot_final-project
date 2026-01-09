@@ -16,12 +16,18 @@ std::string InventoryManager::listItems(){
 }
 
 void InventoryManager::borrowItem(int itemId, const std::string& username){
+    std::unique_lock<std::mutex> lock(mtx);
     try{
-        Item item = findItemById(itemId);
+        Item founditem = findItemById(itemId);
+    }
+    catch (const std::runtime_error& e){
+        std::cerr << e.what() << std::endl;
     }
     catch (const std::invalid_argument& e){
-        std::cerr << "Error: " << e.what() << std::endl;
+        std::cerr << e.what() << std::endl;
     }
+    founditem.borrow(username);
+    lock.unlock()
 }
 
 void InventoryManager::returnItem(int itemId, const std::string& username){
@@ -33,10 +39,14 @@ void InventoryManager::waitUntilAvailable(int itemId, const std::string& usernam
 }
 
 Item& InventoryManager::findItemById(int itemId){
-    for (size_t i = 0 ; i < items.size() ; i++){
-        if(items[i].getId() == itemId) return items[i];
-    }
+    for(const auto& item : items){
+        if(item.getId() == itemId){
+            if(!item.isAvailable())]){
+                throw std::runtime_error("Item is currently borrowed.");
+            }
+             return item;
+        }
     throw std::invalid_argument("Item not found.");
+    }
 }
-
         
