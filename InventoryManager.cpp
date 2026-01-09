@@ -1,28 +1,42 @@
-#include "InventoryManager.h";
+#include "InventoryManager.hpp"
+#include <iostream>
 
-InventoryManager(Item& items): items(items){
+//Constructors:
+InventoryManager::InventoryManager(){} //empty constructor.
 
-    std::string listItems();
+InventoryManager::InventoryManager(const std::vector<Item>& items) : items(items){} //Item-type vector-reference receiving constructor.
+//
 
-    void borrowItem(int itemId, const std::string& username){
-        try:
-            Item item = findItemById(itemId);
-            
-        //catch(nonexistant_item_err e){}
+std::string InventoryManager::listItems(){
+    std::string result;
+    for(const auto& item : items){
+        result += std::to_string(item.getId()) + " ";
     }
-
-    void returnItem(int itemId, const std::string& username){
-
-    }
-
-    void waitUntilAvailable(int itemId, const std::string& username){
-
-    }
-
-    Item& findItemById(int itemId){
-        for (size_t i = 0 ; i < items.size() ; i++){
-            if(item[i] -> name == itemId) return item[i];
-        }
-    } 
+    return result;
 }
+
+void InventoryManager::borrowItem(int itemId, const std::string& username){
+    try{
+        Item item = findItemById(itemId);
+    }
+    catch (const std::invalid_argument& e){
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+}
+
+void InventoryManager::returnItem(int itemId, const std::string& username){
+    
+}
+
+void InventoryManager::waitUntilAvailable(int itemId, const std::string& username){
+
+}
+
+Item& InventoryManager::findItemById(int itemId){
+    for (size_t i = 0 ; i < items.size() ; i++){
+        if(items[i].getId() == itemId) return items[i];
+    }
+    throw std::invalid_argument("Item not found.");
+}
+
         
