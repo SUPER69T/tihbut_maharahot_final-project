@@ -15,12 +15,12 @@ class Item {
 
         int getId() const;
         std::string& getName() ;
-        bool isAvailable();
+        bool isAvailable() const;
         std::string& getBorrower();
 
         void borrow(const std::string& username);
         void returnBack(const std::string& username);
-        std::string toString();
+        std::string toString() const;
     
 };
 #endif

@@ -14,16 +14,18 @@ class InventoryManager{
         std::condition_variable cv; 
         std::string listItems(std::vector<Item>& items); //could have also implemented "string_view_literals".
 
+        Item& findItemById(int itemId);
+
     public:
         //Constructors:
         InventoryManager(); //empty constructor.
         InventoryManager(const std::vector<Item>& items); //Item-type vector-reference receiving constructor.
         //
-        std::string listItems();
+        std::string listItems() const;
         void borrowItem(int itemId, const std::string& username);
         void returnItem(int itemId, const std::string& username);
         void waitUntilAvailable(int itemId, const std::string& username);
-        Item& findItemById(int itemId);
+        
 };
 
 #endif
