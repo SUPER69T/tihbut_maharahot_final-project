@@ -26,7 +26,6 @@ void InventoryManager::borrowItem(int itemId, const std::string& username){
         Item founditem = findItemById(itemId);
         founditem.borrow(username);
         lock.unlock();
-        cv.notify_all();
     }
     catch (const std::runtime_error& e){
         std::cerr << e.what() << std::endl;
