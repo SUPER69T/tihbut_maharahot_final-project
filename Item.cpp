@@ -6,7 +6,7 @@
 
 Item::Item(int id,const std::string& name): id(id),name(name),isBorrowed(false),borrowedBy(""){
     if(id<0){
-        throw ("ID should be possitive");
+        throw std::invalid_argument("ID should be possitive");
     }
 }
 Item::Item(): id(0),name("0"),isBorrowed(false),borrowedBy(""){}
@@ -16,7 +16,7 @@ int Item::getId() const{
 std::string& Item::getName() {
     return name;
 }
-bool Item::isAvailable(){
+bool Item::isAvailable() const{
     return !isBorrowed;
 }
 std::string& Item::getBorrower(){
@@ -24,10 +24,25 @@ std::string& Item::getBorrower(){
 }
 void Item::borrow(const std::string& username){
     if (isBorrowed){
-        throw std::runtime_error("The item is not Avaliable");
+        throw std::runtime_error("The item is not available");
     }
     borrowedBy=username;
     isBorrowed=true;
+}
+
+void Item::returnBack(const std::string& username){
+    if(!isBorrowed){
+        throw std::runtime_error("The item is not borrowed.");
+    }
+    if(borrowedBy != username){
+        throw std::runtime_error("You are not the borrower of this item.");
+    }
+    
+    isBorrowed=false;
+    borrowedBy="";
+}
+std::string Item::toString() const{
+    return "Item ID: " + std::to_string(id) + ", Name: " + name + ", Available: " + (isBorrowed ? "No" : "Yes") + (isBorrowed ? ", Borrowed by: " + borrowedBy : "");
 }
 
 
