@@ -5,6 +5,7 @@
 InventoryManager::InventoryManager(){
     items.emplace_back(1, "Default Item");
     items.emplace_back(2, "Sample Item");
+    // Populate with some default items on Main we will create our own items.
     
 } //empty constructor.
 
