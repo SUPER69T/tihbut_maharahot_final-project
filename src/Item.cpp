@@ -21,11 +21,16 @@ std::string& Item::getBorrower(){
     return borrowedBy;
 }
 void Item::borrow(const std::string& username){
-    if (isBorrowed){
+    if(isBorrowed){
         throw Item_exception("The item is not available");
     }
-    borrowedBy=username;
-    isBorrowed=true;
+
+    else if(typeid(username) != typeid(std::string) or typeid(username) != typeid(char)){ //guessing the request was to simply check username type compatibility...?
+        throw Item_exception("Invalid username.");
+    }
+
+    borrowedBy = username;
+    isBorrowed = true;
 }
 
 void Item::returnBack(const std::string& username){
