@@ -1,12 +1,10 @@
 #include "Item.hpp"
+#include <Item_exception.hpp>
 //#include <iostream>
-#include <stdexcept>
-
-// using namespace std;
 
 Item::Item(int id,const std::string& name): id(id),name(name),isBorrowed(false),borrowedBy(""){
     if(id < 0){
-        throw std::invalid_argument("ID should be possitive");
+        throw Item_exception("ID should be possitive");
     }
 }
 Item::Item(): id(0),name("0"),isBorrowed(false),borrowedBy(""){}
@@ -24,7 +22,7 @@ std::string& Item::getBorrower(){
 }
 void Item::borrow(const std::string& username){
     if (isBorrowed){
-        throw std::runtime_error("The item is not available");
+        throw Item_exception("The item is not available");
     }
     borrowedBy=username;
     isBorrowed=true;
@@ -32,17 +30,17 @@ void Item::borrow(const std::string& username){
 
 void Item::returnBack(const std::string& username){
     if(!isBorrowed){
-        throw std::runtime_error("The item is not borrowed.");
+        throw Item_exception("The item is not borrowed.");
     }
     if(borrowedBy != username){
-        throw std::runtime_error("You are not the borrower of this item.");
+        throw Item_exception("You are not the borrower of this item.");
     }
     
     isBorrowed = false;
     borrowedBy = "";
 }
 std::string Item::toString() const{
-    return "Item ID: " + std::to_string(id) + ", Name: " + name + ", Available: " + (isBorrowed ? "No" : "Yes") + (isBorrowed ? ", Borrowed by: " + borrowedBy : "");
+    return std::to_string(id) + name + (isBorrowed ? "No" : "Yes") + (isBorrowed ? borrowedBy : "");
 }
 
 

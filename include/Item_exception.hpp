@@ -30,6 +30,9 @@ public:
 
     noexcept override: google: "The noexcept specifier in C++ is -
     a declaration that guarantees a function will not throw any exceptions"
+
+    char*: the main 2 reasons for returning a pointer is for the possibility of the message being a -
+    primitive type, and because it was declared so in the original exception base class this way...  
     */
     virtual const char* what() const noexcept override{
         return msg.c_str();

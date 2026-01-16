@@ -119,5 +119,19 @@ void handle_client(int client_fd){
 
 
 int main(int argc, char **argv){
-        
+/*
+try{
+    Item& founditem = findItemById(itemId);
+    if(founditem.isAvailable()){
+    founditem.borrow(username);
+    }
+    std::lock_guard<std::mutex> unlock(mtx);
+}
+catch (const std::runtime_error& e){
+    std::cerr << e.what() << std::endl;
+}
+catch (const std::invalid_argument& e){
+    std::cerr << e.what() << std::endl;
+}
+*/
 }
