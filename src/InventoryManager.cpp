@@ -1,5 +1,10 @@
 #include "InventoryManager.hpp"
 #include "IM_exception.hpp"
+#include "Item.hpp"
+#include <string>
+#include <vector>
+#include <mutex>
+#include <condition_variable>
 
 //Constructors:
 InventoryManager::InventoryManager(){} //empty constructor.

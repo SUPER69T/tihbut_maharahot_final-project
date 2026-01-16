@@ -39,4 +39,4 @@ class InventoryManager{
         //
 };
 
-#endif
+#endif //INVENTORYMANAGER_H

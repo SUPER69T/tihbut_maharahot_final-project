@@ -1,5 +1,6 @@
 #include "Item.hpp"
 #include <Item_exception.hpp>
+#include <string>
 //#include <iostream>
 
 Item::Item(int id,const std::string& name): id(id),name(name),isBorrowed(false),borrowedBy(""){

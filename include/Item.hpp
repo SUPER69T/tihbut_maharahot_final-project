@@ -1,5 +1,5 @@
-#ifndef Item_h
-#define Item_h
+#ifndef ITEM_H
+#define ITEM_H
 
 #include <string>
 
@@ -25,4 +25,4 @@ class Item {
     
 };
 
-#endif
+#endif //ITEM_H
