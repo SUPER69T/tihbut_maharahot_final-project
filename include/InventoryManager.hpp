@@ -9,12 +9,16 @@
 
 class InventoryManager{
     private:
+        //Fields:
         std::vector<Item> items;  
         std::mutex mtx;
         std::condition_variable cv; 
         std::string listItems(std::vector<Item>& items); //could have also implemented "string_view_literals".
+        //
 
+        //Private methods:
         Item& findItemById(int itemId);
+        //
 
     public:
         //Constructors:
@@ -23,15 +27,15 @@ class InventoryManager{
         //
 
         //Destructor:
-        ~InventoryManager() = default;
+        ~InventoryManager() = default; //thought of implementing a manual destructor, but that -
+        //seems unnecessary due to the defualt cpp RAII implementations of our used objects here...
         //
 
-        //Methods:
+        //Public methods:
         std::string listItems();
         void borrowItem(int itemId, const std::string& username);
         void returnItem(int itemId, const std::string& username);
         void waitUntilAvailable(int itemId, const std::string& username);
-        Item& findItemById(int itemId);
         //
 };
 

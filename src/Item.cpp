@@ -1,11 +1,11 @@
 #include "Item.hpp"
-#include <iostream>
+//#include <iostream>
 #include <stdexcept>
 
 // using namespace std;
 
 Item::Item(int id,const std::string& name): id(id),name(name),isBorrowed(false),borrowedBy(""){
-    if(id<0){
+    if(id < 0){
         throw std::invalid_argument("ID should be possitive");
     }
 }
@@ -38,8 +38,8 @@ void Item::returnBack(const std::string& username){
         throw std::runtime_error("You are not the borrower of this item.");
     }
     
-    isBorrowed=false;
-    borrowedBy="";
+    isBorrowed = false;
+    borrowedBy = "";
 }
 std::string Item::toString() const{
     return "Item ID: " + std::to_string(id) + ", Name: " + name + ", Available: " + (isBorrowed ? "No" : "Yes") + (isBorrowed ? ", Borrowed by: " + borrowedBy : "");

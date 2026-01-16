@@ -1,0 +1,46 @@
+#ifndef ITEM_EXCEPTION_H
+#define ITEM_EXCEPTION_H
+
+#include <exception>
+#include <string>
+#include <vector>
+#include <iostream>
+
+class Item_exception : public std::exception {
+private:
+    std::string msg;
+
+public:
+    //inline: so that this "history" implementation shared memory isn't duplicated across -
+    //multiple occurrences of Item_exception and doesn't cause a compilation error.
+    inline static std::vector<std::string> history;
+
+    
+    //explicit: for clarity of intent -> requires the exception object initiation before passing a string.
+    explicit Item_exception(const std::string& message) : msg(message) {
+        history.push_back(message);
+    }
+    /*
+    virtual: because "what()" method is declared as a virtual method in the base -
+    class, as to be overloadable by other classes to enable polymorphism.
+
+    const char: so the string never gets modified(for safety).
+
+    const function: enforces const on the object which calls "what".
+
+    noexcept override: google: "The noexcept specifier in C++ is -
+    a declaration that guarantees a function will not throw any exceptions"
+    */
+    virtual const char* what() const noexcept override{
+        return msg.c_str();
+    };
+
+    static void print_history() {
+        std::cout << "--- Item exceptions history ---" << std::endl;
+        for(const auto& error : history){
+            std::cout << "- " << error << std::endl;
+        }
+    }
+};
+
+#endif

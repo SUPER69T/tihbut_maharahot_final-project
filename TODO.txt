@@ -1,0 +1,7 @@
+<build>: -<status>:
+
+items -(V)   
+InventoryManager -X
+
+implement new exception type for: 1.item 2.manager -X
+catch, filter and send messages to client -X
