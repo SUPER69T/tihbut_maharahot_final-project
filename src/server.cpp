@@ -118,6 +118,6 @@ void handle_client(int client_fd){
 
 
 
-int main(int argc, char *argv){
+int main(int argc, char **argv){
         
 }

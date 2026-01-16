@@ -3,5 +3,5 @@
 items -(V)   
 InventoryManager -X
 
-implement new exception type for: 1.item 2.manager -X
+implement new exception type for: 1.item 2.manager -(V)
 catch, filter and send messages to client -X

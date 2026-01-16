@@ -1,5 +1,6 @@
 #include "InventoryManager.hpp"
-#include <iostream>
+#include "IM_exception.hpp"
+//#include <iostream>
 
 //Constructors:
 InventoryManager::InventoryManager(){} //empty constructor.
@@ -42,7 +43,7 @@ void InventoryManager::returnItem(const int itemId, const std::string& username)
         std::unique_lock<std::mutex> lock(mtx);
         Item& founditem = findItemById(itemId);
         if(founditem.getBorrower() != username){
-            throw std::runtime_error("You are not the borrower of this item.");
+            throw::IM_exception("You are not the borrower of this item.");
         }
         founditem.returnBack(username);
         cv.notify_all();
@@ -59,7 +60,7 @@ Item& InventoryManager::findItemById(const int itemId){
              return item;
         }
     }
-    throw std::invalid_argument("Item not found.");
+    throw IM_exception("Item not found.");
 }
 
         
