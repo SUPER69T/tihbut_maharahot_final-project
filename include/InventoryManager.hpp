@@ -39,9 +39,12 @@ class InventoryManager{
         void returnItem(int itemId, const std::string& username);
         void waitUntilAvailable(int itemId, const std::string& username);
         std::string toString() const;
+
+        friend std::ostream& operator<<(std::ostream& os, const InventoryManager& IM);//:
+        //a more standard way of overloading the "<<" operator. no need for "getter" methods,
+        //grants access to all private fields and methods for convenience.
+
         //
 };
-
-std::ostream& operator<<(std::ostream& os, const InventoryManager& IM);
 
 #endif //INVENTORYMANAGER_H

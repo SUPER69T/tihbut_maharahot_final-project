@@ -71,11 +71,8 @@ void InventoryManager::waitUntilAvailable(const int itemId, const std::string& u
     itemPtr->borrow(username); //throws Item_exception.
 }
 //
-std::string InventoryManager::toString() const{
-    return "InventoryManager, ID - " + std::to_string(this->IM_Id) + ".";
-}
 
 std::ostream& operator<<(std::ostream& os, const InventoryManager& IM){
-    os << IM.toString(); 
+    os << "InventoryManager, ID - " + std::to_string(IM.IM_Id) + ".";
     return os;
 }
