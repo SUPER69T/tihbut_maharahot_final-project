@@ -8,7 +8,7 @@
 #include <mutex>
 #include <condition_variable>
 #include "InventoryManager.hpp"
-
+#include "Item.hpp"
 
 // Read one line until '\n'
 bool recv_line(int fd, std::string& out) {
@@ -79,15 +79,21 @@ void handle_client(int client_fd){
            
 
             
-            }
-            else if(command=="LIST"){
-                send_all(client_fd, "OK LIST\n");
-                
-                
-                
-            
-     
         }
+        /*
+        else if(command=="LIST"){
+            send_all(client_fd, "OK LIST\n");
+
+            std::lock_guard<std::mutex> lock(inventory_mutex);
+            auto items = inventory.getAllItems();
+            
+            for (const auto& item : items) {
+                std::string line = item.getName() + " " + std::to_string(item.getQuantity()) + "\n";
+                send_all(client_fd, line);
+            }
+            send_all(client_fd, ".\n"); 
+        }    
+        */
     }
 }
 
@@ -119,6 +125,9 @@ void handle_client(int client_fd){
 
 
 int main(int argc, char **argv){
+    while(true){
+
+    }
 /*
 try{
     Item& founditem = findItemById(itemId);
