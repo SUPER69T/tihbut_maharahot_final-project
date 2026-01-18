@@ -14,6 +14,8 @@ class InventoryManager{
         std::mutex mtx;
         std::condition_variable cv; 
         std::string listItems(std::vector<Item>& items); //could have also implemented "string_view_literals".
+        static int total_IMs;
+        static int IM_Id;
         //
 
         //Private methods:
@@ -36,7 +38,10 @@ class InventoryManager{
         void borrowItem(int itemId, const std::string& username);
         void returnItem(int itemId, const std::string& username);
         void waitUntilAvailable(int itemId, const std::string& username);
+        std::string toString() const;
         //
 };
+
+std::ostream& operator<<(std::ostream& os, const InventoryManager& IM);
 
 #endif //INVENTORYMANAGER_H

@@ -22,7 +22,9 @@ class Item {
         void borrow(const std::string& username);
         void returnBack(const std::string& username);
         std::string toString() const;
-    
 };
+
+std::ostream& operator<<(std::ostream& os, const Item& item);//:
+//implemented here because of the Open-Closed Principle and the way Argument Dependent Lookup (ADL) works.
 
 #endif //ITEM_H

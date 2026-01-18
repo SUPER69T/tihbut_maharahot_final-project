@@ -49,6 +49,10 @@ std::string Item::toString() const{
     return std::to_string(id) + name + (isBorrowed ? "No" : "Yes") + (isBorrowed ? borrowedBy : "");
 }
 
+std::ostream& operator<<(std::ostream& os, const Item& item) {
+    os << item.toString(); //Reusing our previous toString method like python's: __str__/__repr__ differences.
+    return os;
+}
 
 
 
