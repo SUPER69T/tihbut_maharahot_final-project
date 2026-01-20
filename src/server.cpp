@@ -9,7 +9,41 @@
 #include <condition_variable>
 #include "InventoryManager.hpp"
 #include "Item.hpp"
+#include <unordered_map>
 
+
+
+
+
+int main(int argc, char *argv[]){
+    if (argc < 4)
+    while(true){
+
+    }
+/*
+try{
+    Item& founditem = findItemById(itemId);
+    if(founditem.isAvailable()){
+    founditem.borrow(username);
+    }
+    std::lock_guard<std::mutex> unlock(mtx);
+}
+catch (const std::runtime_error& e){
+    std::cerr << e.what() << std::endl;
+}
+catch (const std::invalid_argument& e){
+    std::cerr << e.what() << std::endl;
+}
+*/
+}
+
+
+
+
+
+
+
+/*
 // Read one line until '\n'
 bool recv_line(int fd, std::string& out) {
     out.clear();
@@ -80,7 +114,6 @@ void handle_client(int client_fd){
 
             
         }
-        /*
         else if(command=="LIST"){
             send_all(client_fd, "OK LIST\n");
 
@@ -93,54 +126,7 @@ void handle_client(int client_fd){
             }
             send_all(client_fd, ".\n"); 
         }    
-        */
+        
     }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-int main(int argc, char **argv){
-    while(true){
-
-    }
-/*
-try{
-    Item& founditem = findItemById(itemId);
-    if(founditem.isAvailable()){
-    founditem.borrow(username);
-    }
-    std::lock_guard<std::mutex> unlock(mtx);
-}
-catch (const std::runtime_error& e){
-    std::cerr << e.what() << std::endl;
-}
-catch (const std::invalid_argument& e){
-    std::cerr << e.what() << std::endl;
 }
 */
-}

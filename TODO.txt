@@ -1,7 +1,20 @@
 <build>: -<status>:
 
-items -(V)   
-InventoryManager -X
+items -(V).
+InventoryManager -(V).
 
-implement new exception type for: 1.item 2.manager -(V)
-catch, filter and send messages to client -X
+implement new exception type for: 1.item 2.manager -(V).
+
+"available sockets" (using: <unordered_map>) -(X).
+
+main *argv[] receiving parameters: -(X).
+ [0] starting port number -(X) (default: 8080).
+ [1] max clients -(X) (default: 10).
+ [2] max "listening" socket threads -(X) (default: 2).
+
+listening socket threads -(X) + semaphore -(X).
+in-progress threads -(X) + semaphore -(X).
+
+in-progress IM functions -(X).
+catch, filter and send messages to client -(X).
+exceptions stack + read log function for each thread -(X).

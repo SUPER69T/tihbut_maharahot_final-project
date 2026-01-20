@@ -60,8 +60,8 @@ void InventoryManager::waitUntilAvailable(const int itemId, const std::string& u
     cv.wait(lock, [&]{
         itemPtr = &findItemById(itemId);
         return itemPtr->isAvailable();
-    }); //a nice little generic function as a boolean checkup inside the cv -
-    //to have safety against spurious wakeups...
+    }); //a nice little generic function as a boolean checkup inside the cv to have safety against - 
+    //spurious wakeups(the C++ standard library internally wraps the wait in a while loop)...
     //
     //gemini came up with the idea to both find the item and check whether it is - 
     //available inside the generic function as the cv boolean checup itself...
