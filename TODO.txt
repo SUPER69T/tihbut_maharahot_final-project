@@ -1,31 +1,25 @@
-<build>: -<status>:    REORDER TODO LIST -(X)
+<build>: -<status>:    
 
-items -(V).
-InventoryManager -(V).
-
-implement new exception type for: 1.item 2.manager -(V).
-
-"available sockets" (using: <unordered_map>) -(X).
-
+server main: 
+write global log function -(V).
 main *argv[] receiving parameters: -(X).
  [0] starting port number -(X) (default: 8080).
  [1] max clients -(X) (default: 10).
-
-in-progress threads -(X) + semaphore -(X).
-
+Timeout timer that throws Timeout_exception for each thread-(X).
 {server function names : IM functions} <unordered_map>, like python's oop implementation -(X).
 
-catch, filter and send messages to client -(X).
 
-exceptions stack -(X) + read log function for each thread -(X).
-write global log function -(V).
+server operations:
+items -(V).
+InventoryManager -(V).
+implement new exception type for: 1.item 2.manager -(V).
+exceptions stack -(V) + read history exception-log for each client -(X).
+send error/exception messages to client -(X).
 
-Timeout timer that throws Timeout_exception for each thread-(X).
+
+client main:
 
 
-
-thread specific:
-
-global:
-
-client side:
+questionable:
+"available sockets" (using: <unordered_map>) -(X).
+in-progress threads -(X) + semaphore -(X).

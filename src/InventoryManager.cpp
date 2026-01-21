@@ -6,6 +6,7 @@
 //would have used #include <unordered_map> instead of the <vector>...
 #include <mutex>
 #include <condition_variable>
+#include <Item_exception.hpp>
 
 int InventoryManager::total_IMs = 0;
 
@@ -49,7 +50,13 @@ void InventoryManager::borrowItem(const int itemId, const std::string& username)
 void InventoryManager::returnItem(const int itemId, const std::string& username){
         std::lock_guard<std::mutex> lock(mtx);
         Item& founditem = findItemById(itemId);
-        founditem.returnBack(username); //throws Item_exception.
+        try{
+            founditem.returnBack(username); //throws Item_exception.
+        }
+        catch (const Item_exception& e){ //catching e by reference and ensuring no modification of the exception object.
+            cv.notify_all();
+            throw; //rethrows - e exception object with all of it's parameters intact.
+        }
         cv.notify_all();
 }
 

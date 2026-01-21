@@ -4,8 +4,9 @@
 //#include <iostream>
 
 Item::Item(int id,const std::string& name): id(id),name(name),isBorrowed(false),borrowedBy(""){
+    //if the next code is thrown c++ will automatically cleanup the uninitiated Item object's fields. 
     if(id < 0){
-        throw Item_exception("ID should be possitive");
+        throw Item_exception("<NULL>", name, "'s ID should be possitive!!");
     }
 }
 Item::Item(): id(0),name("0"),isBorrowed(false),borrowedBy(""){}
@@ -23,11 +24,11 @@ std::string& Item::getBorrower(){
 }
 void Item::borrow(const std::string& username){
     if(isBorrowed){
-        throw Item_exception("The item is not available");
+        throw Item_exception(username, name, " is not available.");
     }
 
     else if(typeid(username) != typeid(std::string) or typeid(username) != typeid(char)){ //guessing the request was to simply check username type compatibility...?
-        throw Item_exception("Invalid username.");
+        throw Item_exception(username, name, " is an Invalid username.");
     }
 
     borrowedBy = username;
@@ -36,10 +37,10 @@ void Item::borrow(const std::string& username){
 
 void Item::returnBack(const std::string& username){
     if(!isBorrowed){
-        throw Item_exception("The item is not borrowed.");
+        throw Item_exception(username, name, " is not borrowed.");
     }
     if(borrowedBy != username){
-        throw Item_exception("You are not the borrower of this item.");
+        throw Item_exception(username, name, " has a different borrower.");
     }
     
     isBorrowed = false;

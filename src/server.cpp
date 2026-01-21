@@ -1,14 +1,30 @@
-#include <iostream>
+//socket:
 #include <arpa/inet.h>
 #include <sys/socket.h>
+//
+
+//POSIX + thread:
 #include <unistd.h>
+#include <thread>
+//
+
+//IO:
+#include <iostream>
+#include <fstream> //::ofstream = used to read and write into files.
+//
+
+//ADTs + primitives:
 #include <string>
 #include <cstring>
-#include <thread>
 #include <vector>
-#include <fstream> //::ofstream = used to read and write into files.
+#include <unordered_map>
+//
+
+//cv + mtx:
 #include <mutex>
-#include <iostream>
+#include <condition_variable>
+//
+
 //---
 #include <cerrno> //provides errno:
 //errno: a modifiable lvalue(locator value*) of int-type that acts as a macro that stores an integer - 
@@ -16,11 +32,12 @@
 //
 //lvalue: an expression that identifies a persistent object or a memory location and therefore has an address.
 //---
-#include <condition_variable>
+
+//project specific:
 #include "InventoryManager.hpp"
 #include "Item.hpp"
-#include <unordered_map>
 #include <Network_Exception.hpp>
+//
 
 //gemini helped a lot explaining the:
 //1. socket creation.
