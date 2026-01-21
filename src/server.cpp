@@ -22,6 +22,14 @@
 
 //cv + mtx:
 #include <mutex>
+#include <iostream>
+//---
+#include <cerrno> //provides errno:
+//errno: a modifiable lvalue(locator value*) of int-type that acts as a macro that stores an integer - 
+//value representing the last error that occurred during a system call or library function call. 
+//
+//lvalue: an expression that identifies a persistent object or a memory location and therefore has an address.
+//---
 #include <condition_variable>
 //
 
@@ -191,6 +199,21 @@ int main(int argc, char *argv[]){
     while(true){
 
     }
+
+
+// try{
+//     Item& founditem = findItemById(itemId);
+//     if(founditem.isAvailable()){
+//     founditem.borrow(username);
+//     }
+//     std::lock_guard<std::mutex> unlock(mtx);
+// }
+// catch (const std::runtime_error& e){
+//     std::cerr << e.what() << std::endl;
+// }
+// catch (const std::invalid_argument& e){
+//     std::cerr << e.what() << std::endl;
+// }
 
 
 // try{
