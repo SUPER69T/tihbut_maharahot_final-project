@@ -1,7 +1,7 @@
 <build>: -<status>:    
 
 server main: 
-write global log function -(V).
+write global log function -(V). create log file next to the executable -(X).
 main *argv[] receiving parameters: -(X).
  [0] starting port number -(X) (default: 8080).
  [1] max clients -(X) (default: 10).

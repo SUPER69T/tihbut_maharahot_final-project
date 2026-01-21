@@ -1,3 +1,5 @@
+//Includes:
+//-----
 //socket:
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -11,6 +13,7 @@
 //IO:
 #include <iostream>
 #include <fstream> //::ofstream = used to read and write into files.
+#include <filesystem> //::path - used for: __FILE__ + .parent_path().
 //
 
 //ADTs + primitives:
@@ -33,19 +36,13 @@
 #include <condition_variable>
 //
 
-//---
-#include <cerrno> //provides errno:
-//errno: a modifiable lvalue(locator value*) of int-type that acts as a macro that stores an integer - 
-//value representing the last error that occurred during a system call or library function call. 
-//
-//lvalue: an expression that identifies a persistent object or a memory location and therefore has an address.
-//---
-
 //project specific:
 #include "InventoryManager.hpp"
 #include "Item.hpp"
 #include <Network_Exception.hpp>
 //
+//-----
+
 
 //gemini helped a lot explaining the:
 //1. socket creation.
@@ -61,7 +58,16 @@ void log_error(const std::string& message) {
     static std::mutex log_mutex; // Shared across all threads
     std::lock_guard<std::mutex> lock(log_mutex); // Locks on entry, unlocks on exit
 
-    std::ofstream log_file("server_errors.log", std::ios::app); //"server_errors.log" = the name of the logging file.
+    //---
+    //now this is a special piece of code gpt showed us to make sure log_file gets created next to the source file(post-compilation) -
+    //on linux OS distros, instead of the pwd, which happens to be a much harder task than we initially speculated.
+    //__FILE__ = a compile-time macro containing the path of the source file as seen by the compiler.
+    //.parent_path() = a method from the std::filesystem::path that returns the parent directory that contains the current path.
+    //this "trick" is a bad practice of how c++ should be handled as it leaks build-system structure into runtime behavior.
+    std::filesystem::path source_dir = std::filesystem::path(__FILE__).parent_path();
+    //---
+
+    std::ofstream log_file(source_dir / "server_errors.log", std::ios::app); //"server_errors.log" = the name of the logging file.
     //app = append modifier for the stream to write to the end of the file, regardless of the file's pointer position.
     if (log_file.is_open()) {
         log_file << "[LOG]: " << message << std::endl;
