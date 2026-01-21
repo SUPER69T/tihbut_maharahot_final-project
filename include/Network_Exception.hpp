@@ -16,6 +16,7 @@ class Network_Exception : public std::runtime_error{
         //sterror is an awsome C function that returns the text description of the error types, requires an error-code.
         error_code(err) {}
 
+        //implemented mainly for the practice itself:
         int get_code() const noexcept {return error_code;} //a method used for manual errno if-condition checking in a "catch" block where the exception is -
         //thrown in order to apply an alternative operation rather than Network_Exception's standard handling(implemented in - server.cpp, line ~ 110).
     };
