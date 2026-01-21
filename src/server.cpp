@@ -147,6 +147,21 @@ int main(int argc, char *argv[]){
 
     // 5. accept – קבלת חיבור מלקוח
     int client_fd = accept(server_fd, nullptr, nullptr);
+    
+    
+    //
+    char host[NI_MAXHOST];
+    char service[NI_MAXSERV];
+
+    int result = getnameinfo((struct sockaddr *)&client_addr, addr_len,
+                            host, sizeof(host),
+                            service, sizeof(service), 0);
+
+    if (result == 0) {
+        printf("Client Host: %s, Port: %s\n", host, service);
+    }
+    //
+
 
     // 6. קבלת הודעה מהלקוח
     char buffer[1024];
