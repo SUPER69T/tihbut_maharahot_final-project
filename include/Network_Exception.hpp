@@ -3,6 +3,7 @@
 #include <cstring> //used for strerror.
 
 //gemini's help for making a hirarchy-exceptions structure:
+//this exception class is used for server-network-sided exception throwing, meaning the client does not get access to the exception-logging file.
 //{
 //Base Network Exception:
 //children: Bind_Exception, Timeout_Exception.
