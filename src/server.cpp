@@ -49,7 +49,7 @@
 int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]].
     
     //immediately starting the first timeout timer:
-    timeout_timer timer(std::chrono::seconds(20), "server startup timer."); 
+    timeout_timer timer1(std::chrono::seconds(20), "server startup timer."); 
     //
 
     //default arguments:
@@ -98,6 +98,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
     //
     //protocol: 0 = Default Protocol: Because you requested a stream socket over IPv4, the OS defaults to TCP (IPPROTO_TCP).
 
+    timer1.check_timeout(); //1
     
     //modified socket behavior to allow immediate reuse of the port(Gemini's implementation...):
     //-------
@@ -106,6 +107,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
     //-------
     //-----
 
+    timer1.check_timeout(); //2
 
     //2: (configuring the address):
     //-----
@@ -129,6 +131,8 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
     //while htons(Host To Network Short): Converts a 16-bit number from host to network byte order -
     //(from the CPU's order[Little-Endian in most CPUs{intel/AMD}] to the Network's order[Big-Endian in most IP types{TCP/UDP}]).
     //-----
+
+    timer1.check_timeout(); //3
 
     //3: (binding to the socket):
     //-----

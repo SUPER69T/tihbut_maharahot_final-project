@@ -1,10 +1,10 @@
-#ifndef TIMEOUT_TIMER_HPP
-#define TIMEOUT_TIMER_HPP
+#ifndef LOOPING_T_TIMER_HPP
+#define LOOPING_T_TIMER_HPP
 
 #include <chrono>
 #include <string>
 
-class timeout_timer{
+class looping_t_timer{
     private:
             std::chrono::steady_clock::time_point deadline;
             std::chrono::milliseconds duration;
@@ -12,10 +12,15 @@ class timeout_timer{
 
     public:
         //constructor:
-        timeout_timer(const std::chrono::seconds& timeout, const std::string& timer_name);
+        looping_t_timer(const std::chrono::seconds& timeout, const std::string& timer_name);
         //
+
+        //destructor:
+        ~looping_t_timer(); 
+        //
+        
         void check_timeout() const;
         void reset();
 };
 
-#endif //TIMEOUT_TIMER_H
+#endif //LOOPING_T_TIMER_HPP
