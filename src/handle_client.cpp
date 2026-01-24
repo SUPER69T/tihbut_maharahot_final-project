@@ -7,25 +7,6 @@
 #include "InventoryManager.hpp"
 #include <Network_Exception.hpp>
 
-//a simple framing for TCP. reading a single line until we reach - '\n':
-bool recv_line(int fd, std::string& out){
-    out.clear();
-    char c;
-    while(true){
-        //receiving a single character:
-        ssize_t n = recv(fd, &c, 1, 0);
-
-        //if client disconnects:
-        if(n <= 0) return false;
-
-        // if we reach end of line:
-        if(c == '\n') break;
-
-        //append character to output
-        out.push_back(c);
-    }
-    return true;
-}
 
 //a safe sending of an entire string:
 void send_all(int fd, const std::string& msg){
@@ -72,6 +53,25 @@ void send_all(int fd, const std::string& msg){
         }
         else sent += n; //continuing the iteration - there are more bytes to be transferred. 
     }
+}
+
+//TCP framing of each byte at a time, with a max of: default=1024 bytes, until we reach - '\n':
+bool recv_line(int fd, std::string& out, size_t max_len = 4096){
+    out.clear();
+    char c;
+    while(out.size() < max_len) {
+        ssize_t n = recv(fd, &c, 1, 0); //:
+        //this approach is highly inefficient due to repeatd calls to recv() for every single input character.
+        //a better approach would involve buffering larger chunks of bytes each time and keeping track of the -
+        //current pos-index location on the buffered input stream. 
+
+        if(n == 0) return false; //the connection was closed normally.
+        if(n < 0){ //best practice would adding additional checked conditions inside try-catch blocks for debugging.
+            return false; 
+        }
+        if(c == '\n') return true; //finished receiving the entire message.
+    }
+    return false; //Reaching max_len without finding newline.
 }
 
 //Checking whether a string is all digits: 
