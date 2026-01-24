@@ -1,4 +1,4 @@
-<build>: -<status>:    
+<build>: -<status>:    txplain std::move in timeout_timer class -(X).
 
 server main: 
 write global log function -(V). create log file next to the executable -(X).
@@ -23,3 +23,4 @@ client main:
 questionable:
 "available sockets" (using: <unordered_map>) -(X).
 in-progress threads -(X) + semaphore -(X).
+

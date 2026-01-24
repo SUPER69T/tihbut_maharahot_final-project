@@ -7,13 +7,15 @@
 class timeout_timer{
     private:
             std::chrono::steady_clock::time_point deadline;
+            std::chrono::milliseconds duration;
             std::string name;
 
     public:
         //constructor:
-        timeout_timer(std::chrono::milliseconds& timeout, const std::string& timer_name);
+        timeout_timer(const std::chrono::seconds& timeout, const std::string& timer_name);
         //
         void check_timeout() const;
+        void reset();
 };
 
 #endif //TIMEOUT_TIMER_H

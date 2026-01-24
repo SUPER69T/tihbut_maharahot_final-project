@@ -82,7 +82,7 @@ class Bind_Exception : public Network_Exception{
 class Timeout_Exception : public Network_Exception{
     public:
         explicit Timeout_Exception(const std::string& msg, const int err) 
-        : Network_Exception("Timeout Error: " + msg, err) {}
+        : Network_Exception("Timeout Error on: " + msg, err) {}
     };
 
 //a Network_Exception's child- "Socket" Error:

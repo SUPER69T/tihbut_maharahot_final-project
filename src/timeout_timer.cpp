@@ -4,8 +4,8 @@
 #include <string>
 
 
-timeout_timer::timeout_timer(std::chrono::milliseconds& timeout, const std::string& timer_name)
-    : name(std::move(timer_name)){
+timeout_timer::timeout_timer(const std::chrono::seconds& timeout, const std::string& timer_name)
+    : duration(timeout), name(std::move(timer_name)){ //EXPLAIN LATER: std:move.
     // Calculating the deadline once at construction:
     deadline = std::chrono::steady_clock::now() + timeout;
 }
@@ -15,4 +15,9 @@ void timeout_timer::check_timeout() const{
     if (std::chrono::steady_clock::now() > deadline){
         throw Timeout_Exception("Timer '" + name + "' has expired.", errno);
     }
+}
+
+void timeout_timer::reset() {
+    //the deadline is refreshed to "now + original duration":
+    deadline = std::chrono::steady_clock::now() + duration;
 }

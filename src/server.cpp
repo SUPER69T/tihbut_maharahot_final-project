@@ -18,6 +18,7 @@
 //ADTs + primitives:
 #include <string>
 #include <cstring>
+#include <vector>
 //
 
 //---
@@ -34,6 +35,7 @@
 #include <InventoryManager.hpp>
 #include <handle_client.hpp>
 #include <safe_print.hpp>
+#include <timeout_timer.hpp>
 //
 //-----
 
@@ -46,8 +48,8 @@
 //argc: argument count, argv: argument vector.
 int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]].
     
-    //
-    auto start = std::chrono::steady_clock::now(); //immediately starting the timeout timer.
+    //immediately starting the first timeout timer:
+    timeout_timer timer(std::chrono::seconds(20), "server startup timer."); 
     //
 
     //default arguments:
@@ -73,7 +75,15 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
     }
 
     //Creating an InventoryManager instance:
-    Store::InventoryManager items;
+    std::vector<Store::Item> items_vec = {Store::Item(1, "Camera"),
+    Store::Item(2, "Tripod"), Store::Item(3, "Laptop"),
+    Store::Item(4, "Projector"), Store::Item(5, "Microphone"),
+    Store::Item(6, "Speaker"), Store::Item(7, "HDMI_Cable"),
+    Store::Item(8, "Ethernet_Cable"), Store::Item(9, "Keyboard"),
+    Store::Item(10, "Mouse"), Store::Item(11, "Monitor"),
+    Store::Item(12, "USB_Hub"), Store::Item(13, "Power_Bank")};
+
+    Store::InventoryManager items(items_vec);
 
 
     
@@ -155,8 +165,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
     //-----
 
     //probably as good as any time to set the first main-timeout end-point:
-        auto end = std::chrono::steady_clock::now(); //immediately starting the timeout timer.
-        std::chrono::duration<double> elapsed_seconds = end - start;
+        
     //
 
     //5. (accepting a connection): 
