@@ -84,16 +84,16 @@ bool is_number(const std::string& s){
 
 void handle_client(int client_fd, Store::InventoryManager& inventory){
 
-    bool is_authenticated=false; //check if the user did Hello 
-    std::string username; //UserName Name
+    bool is_authenticated = false; //checking whether the user sent an entry - "Hello" message. 
+    std::string username; 
 
-    // Process client commands
+    //Process-client commands:
     while(true){
-        bool check_username=true; //to valid the username (while we run we can see if we realy need another check if the user is authenticated)
+        bool check_username = true; //to authenticating the username.
 
         std::string line;
 
-        if(!recv_line(client_fd, line)) break; //the client disconnected 
+        if(!recv_line(client_fd, line, 4096)) break; //the client disconnected 
 
         // Split command and argument we need how to message will come
         std::string command;

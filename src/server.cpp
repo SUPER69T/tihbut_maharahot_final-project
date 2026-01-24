@@ -7,6 +7,7 @@
 
 //POSIX + thread:
 #include <unistd.h>
+#include <chrono>
 #include <thread>
 //
 
@@ -32,6 +33,7 @@
 #include <Item.hpp>
 #include <InventoryManager.hpp>
 #include <handle_client.hpp>
+#include <safe_print.hpp>
 //
 //-----
 
@@ -44,6 +46,10 @@
 //argc: argument count, argv: argument vector.
 int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]].
     
+    //
+    auto start = std::chrono::steady_clock::now(); //immediately starting the timeout timer.
+    //
+
     //default arguments:
     int prt = 8080;
     int listen_counter = 20;
@@ -145,19 +151,24 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
     //4. (listening to clients):
     //-----
     listen(server_fd, listen_counter); //limiting listens to the counter.
-    std::cout << "listening on port - " <<prt << "..." << std::endl;
+    safe_print("listening on port - " + std::to_string(prt) + "...");
     //-----
+
+    //probably as good as any time to set the first main-timeout end-point:
+        auto end = std::chrono::steady_clock::now(); //immediately starting the timeout timer.
+        std::chrono::duration<double> elapsed_seconds = end - start;
+    //
 
     //5. (accepting a connection): 
     //-----
-    // Accept and handle client connections
-    while(true){//*
-        //Accepting a new client connection:
-        int client_fd = accept(server_fd, nullptr, nullptr);//:
+    //Acceptting and handling a client's connection:
+    while(true){
+        //Accepting a new client's connection:
+        int client_fd = accept(server_fd, nullptr, nullptr); //:
         //
         
         // Creating a new thread in order to handle the client:
-        std::thread(handle_client, client_fd, std::ref(items)).detach();//:
+        std::thread(handle_client, client_fd, std::ref(items)).detach(); //
         //*Note - this type of manual socket-opening technique we use here is called "Blocking-socket opening".
         //the reason it is discouraged(compared to non-Blocking alternatives like using select()/poll()/epoll()) is because - 
         //every operation we do on a single socket(read/write...) haults the thread, thus only enabling the creation of a single -
@@ -166,6 +177,14 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
 
     //6. (closing the server socket):
     //-----
+    safe_print("Closing the server in:");
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    safe_print("3...");
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    safe_print("2...");
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    safe_print("1...\ngoodbye! <O_O>");
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     close(server_fd);
     return 0;
     //-----

@@ -16,7 +16,7 @@ namespace Store{
         //inline: so that this "history" implementation shared memory isn't duplicated across -
         //multiple occurrences of Item_exception and doesn't cause a compilation error.
         inline static std::vector<std::string> history;
-
+        
 
         //explicit: for clarity of intent -> requires the exception object initiation before passing a string.
         explicit IM_exception(const std::string& username, const std::string& message) : msg(username + ": " + message){
