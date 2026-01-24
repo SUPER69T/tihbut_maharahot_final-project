@@ -12,20 +12,13 @@
 
 //IO:
 #include <iostream>
-#include <fstream> //::ofstream = used to read and write into files.
-#include <filesystem> //::path - used for: __FILE__ + .parent_path().
 //
 
 //ADTs + primitives:
 #include <string>
 #include <cstring>
-#include <vector>
-#include <unordered_map>
 //
 
-//cv + mtx:
-#include <mutex>
-#include <iostream>
 //---
 #include <cerrno> //provides errno:
 //errno: a modifiable lvalue(locator value*) of int-type that acts as a macro that stores an integer - 
@@ -33,13 +26,12 @@
 //
 //lvalue: an expression that identifies a persistent object or a memory location and therefore has an address.
 //---
-#include <condition_variable>
-//
 
 //project specific:
-#include "InventoryManager.hpp"
-#include "Item.hpp"
 #include <Network_Exception.hpp>
+#include <Item.hpp>
+#include <InventoryManager.hpp>
+#include <handle_client.hpp>
 //
 //-----
 
@@ -47,41 +39,38 @@
 //gemini helped a lot explaining the:
 //1. socket creation.
 //2. multi-threading control.
-//3. ...
+//3. consturcting most of the Network_Exception handling system.
 
-//and it also helped consturcting most of the Network_Exception handling system.
-//this is one of the only blocks we fully let it generate:
-
-//{
-//Thread-safe logging function that opens and saves into a file:
-void log_error(const std::string& message) {
-    static std::mutex log_mutex; // Shared across all threads
-    std::lock_guard<std::mutex> lock(log_mutex); // Locks on entry, unlocks on exit
-
-    //---
-    //now this is a special piece of code gpt showed us to make sure log_file gets created next to the source file(post-compilation) -
-    //on linux OS distros, instead of the pwd, which happens to be a much harder task than we initially speculated.
-    //__FILE__ = a compile-time macro containing the path of the source file as seen by the compiler.
-    //.parent_path() = a method from the std::filesystem::path that returns the parent directory that contains the current path.
-    //this "trick" is a bad practice of how c++ should be handled as it leaks build-system structure into runtime behavior.
-    std::filesystem::path source_dir = std::filesystem::path(__FILE__).parent_path();
-    //---
-
-    std::ofstream log_file(source_dir / "server_errors.log", std::ios::app); //"server_errors.log" = the name of the logging file.
-    //app = append modifier for the stream to write to the end of the file, regardless of the file's pointer position.
-    if (log_file.is_open()) {
-        log_file << "[LOG]: " << message << std::endl;
-    } else {
-        std::cerr << "Critical: Could not open log file!" << std::endl;
-    }
-}
-//}
-
-
-int main(int argc, char *argv[]){
-    //set argc, argv checks.
+//argc: argument count, argv: argument vector.
+int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]].
+    
+    //default arguments:
     int prt = 8080;
+    int listen_counter = 20;
+    //
 
+    if(argc < 2){ //argc = 1.
+        std::cerr << "\n" << std::endl;
+        return 1;
+    }
+    else if(argc < 3){ //argc = 2.
+        std::cerr << "Specify: port, maxclients.\n" << std::endl;
+        return 1;
+    }
+    else if(argc < 4){ //argc = 3.
+        prt = std::stoi(argv[1]);
+        listen_counter = std::stoi(argv[2]);
+    }
+    else{ //3 < argc.
+        std::cerr << "Too many arguments specified.\n" << std::endl;
+        return 1;
+    }
+
+    //Creating an InventoryManager instance:
+    Store::InventoryManager items;
+
+
+    
     //1: (socket assigning):
     //-----
     int server_fd = socket(AF_INET, SOCK_STREAM, 0); //server-File-Descriptor(on linux OS).
@@ -125,13 +114,13 @@ int main(int argc, char *argv[]){
     //(from the CPU's order[Little-Endian in most CPUs{intel/AMD}] to the Network's order[Big-Endian in most IP types{TCP/UDP}]).
     //-----
 
-    // 3: (binding to the socket):
+    //3: (binding to the socket):
     //-----
     try{
         //bind input structure:
         //bind(socket_descriptor, pointer_to_struct, size_of_struct)
         if(bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0){
-            throw Bind_Exception("socket binding failed.", errno); 
+            throw Bind_Exception("listening-socket binding failed.", errno); 
             //types of bind failures:
             //EADDRINUSE (Port ddress already in use): The most common error. Another process is already using port 8080.
             //EACCES (Permission denied): You tried to bind to a "privileged" port (0–1023) without root/administrator privileges.
@@ -140,7 +129,6 @@ int main(int argc, char *argv[]){
         }
     } 
     catch (const Bind_Exception& e){ //:this is the earliest moment in the code where we might start throwing exceptions.
-        log_error(e.what()); //here we implement the thread-safe logging function that gemini has generated.
         //The manul errno checking(explained in - Network_Exception, line ~ 18):
         if(e.get_code() == 98){//Ideally this peace of code would be reused as boilerplate code but -
         //the spread out socket opening explanations were worth the extra space...   
@@ -154,180 +142,31 @@ int main(int argc, char *argv[]){
     //-----
 
 
-    // 4. listen – השרת מוכן לקבל חיבורים
-    listen(server_fd, 1); // תור חיבורים בגודל 1
+    //4. (listening to clients):
+    //-----
+    listen(server_fd, listen_counter); //limiting listens to the counter.
+    std::cout << "listening on port - " <<prt << "..." << std::endl;
+    //-----
 
-    std::cout << "Server waiting for client...\n";
-
-    // 5. accept – קבלת חיבור מלקוח
-    int client_fd = accept(server_fd, nullptr, nullptr);
-    
-    
-    //
-    char host[NI_MAXHOST];
-    char service[NI_MAXSERV];
-
-    int result = getnameinfo((struct sockaddr *)&client_addr, addr_len,
-                            host, sizeof(host),
-                            service, sizeof(service), 0);
-
-    if (result == 0) {
-        printf("Client Host: %s, Port: %s\n", host, service);
-    }
-    //
-
-
-    // 6. קבלת הודעה מהלקוח
-    char buffer[1024];
-    recv(client_fd, buffer, sizeof(buffer), 0);
-
-    std::cout << "Received from client: " << buffer << std::endl;
-
-    // 7. שליחת תשובה ללקוח
-    const char* reply = "Hello from server";
-    send(client_fd, reply, strlen(reply) + 1, 0);
-
-    // 8. סגירת sockets
-    close(client_fd);
-    close(server_fd);
-
-    return 0;
-}
-
-
-
-
-
-
-/*
-int main(int argc, char *argv[]){
-    if (argc < 4)
-    while(true){
-
-    }
-
-
-// try{
-//     Item& founditem = findItemById(itemId);
-//     if(founditem.isAvailable()){
-//     founditem.borrow(username);
-//     }
-//     std::lock_guard<std::mutex> unlock(mtx);
-// }
-// catch (const std::runtime_error& e){
-//     std::cerr << e.what() << std::endl;
-// }
-// catch (const std::invalid_argument& e){
-//     std::cerr << e.what() << std::endl;
-// }
-
-
-// try{
-//     Item& founditem = findItemById(itemId);
-//     if(founditem.isAvailable()){
-//     founditem.borrow(username);
-//     }
-//     std::lock_guard<std::mutex> unlock(mtx);
-// }
-// catch (const std::runtime_error& e){
-//     std::cerr << e.what() << std::endl;
-// }
-// catch (const std::invalid_argument& e){
-//     std::cerr << e.what() << std::endl;
-// }
-}
-*/
-
-
-
-
-
-
-
-/*
-// Read one line until '\n'
-bool recv_line(int fd, std::string& out) {
-    out.clear();
-    char c;
-    while (true) {
-        ssize_t n = recv(fd, &c, 1, 0);
-        if (n <= 0) return false;
-        if (c == '\n') break;
-        out.push_back(c);
-    }
-    return true;
-}
-
-// Send the entire message
-void send_all(int fd, const std::string& msg) {
-    size_t sent = 0;
-    while (sent < msg.size()) {
-        ssize_t n = send(fd, msg.data() + sent, msg.size() - sent, 0);
-        if (n <= 0) return;
-        sent += n;
-    }
-}
-
-
-void handle_client(int client_fd){
-    bool is_authenticated=false; 
-    std::string username;   
-    
-    while(true){
-        bool check_username=true;
-        std::string line;
-        if(!recv_line(client_fd, line)) break;
-        std::string command;
-        std::string arg;
-        size_t space_pos=line.find(' ');
-        if(space_pos!=std::string::npos){
-            command=line.substr(0,space_pos);
-            arg=line.substr(space_pos+1);
-        }else{
-            command=line;
-        }
-
-        if (command=="HELLO"){
-                username=arg;
-                if(username.empty()){
-                    send_all(client_fd, "ERR PROTOCOL missing_username\n");
-                    check_username=false;
-                    continue;
-                }
-                
-                for (char c : username){
-                    if(!isalpha(c)){
-                        is_authenticated=false;
-                        send_all(client_fd, "ERR PROTOCOL invalid_username\n");
-                        check_username=false;
-                        break;
-                       
-                    }
-                }
-                if(check_username){
-                    is_authenticated=true;
-                    send_all(client_fd, "OK HELLO\n");
-                }
-                
-        }else if(!is_authenticated){
-            send_all(client_fd, "ERR STATE not_authenticated\n");
-           
-
-            
-        }
-        else if(command=="LIST"){
-            send_all(client_fd, "OK LIST\n");
-
-            std::lock_guard<std::mutex> lock(inventory_mutex);
-            auto items = inventory.getAllItems();
-            
-            for (const auto& item : items) {
-                std::string line = item.getName() + " " + std::to_string(item.getQuantity()) + "\n";
-                send_all(client_fd, line);
-            }
-            send_all(client_fd, ".\n"); 
-        }    
+    //5. (accepting a connection): 
+    //-----
+    // Accept and handle client connections
+    while(true){//*
+        //Accepting a new client connection:
+        int client_fd = accept(server_fd, nullptr, nullptr);//:
+        //
         
+        // Creating a new thread in order to handle the client:
+        std::thread(handle_client, client_fd, std::ref(items)).detach();//:
+        //*Note - this type of manual socket-opening technique we use here is called "Blocking-socket opening".
+        //the reason it is discouraged(compared to non-Blocking alternatives like using select()/poll()/epoll()) is because - 
+        //every operation we do on a single socket(read/write...) haults the thread, thus only enabling the creation of a single -
+        //socket on each thread, making it much slower and inefficient for robust programs with many concurrent clients to handle.
     }
+
+    //6. (closing the server socket):
+    //-----
+    close(server_fd);
+    return 0;
+    //-----
 }
-*/

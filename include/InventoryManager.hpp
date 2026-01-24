@@ -7,44 +7,47 @@
 #include <mutex>
 #include <condition_variable>
 
-class InventoryManager{
-    private:
-        //Fields:
-        std::vector<Item> items;  
-        std::mutex mtx;
-        std::condition_variable cv; 
-        std::string listItems(std::vector<Item>& items); //could have also implemented "string_view_literals".
-        static int total_IMs;
-        static int IM_Id;
-        //
+namespace Store{
 
-        //Private methods:
-        Item& findItemById(int itemId);
-        //
+    class InventoryManager{
+        private:
+            //Fields:
+            std::vector<Item> items;  
+            std::mutex mtx;
+            std::condition_variable cv; 
+            std::string listItems(std::vector<Item>& items); //could have also implemented "string_view_literals".
+            static int total_IMs;
+            static int IM_Id;
+            //
 
-    public:
-        //Constructors:
-        InventoryManager(); //empty constructor.
-        InventoryManager(const std::vector<Item>& items); //Item-type vector-reference receiving constructor.
-        //
+            //Private methods:
+            Item& findItemById(const std::string& username, const int itemId);
+            //
 
-        //Destructor:
-        ~InventoryManager() = default; //thought of implementing a manual destructor, but that -
-        //seems unnecessary due to the defualt cpp RAII implementations of our used objects here...
-        //
+        public:
+            //Constructors:
+            InventoryManager(); //empty constructor.
+            InventoryManager(const std::vector<Item>& items); //Item-type vector-reference receiving constructor.
+            //
 
-        //Public methods:
-        std::string listItems();
-        void borrowItem(int itemId, const std::string& username);
-        void returnItem(int itemId, const std::string& username);
-        void waitUntilAvailable(int itemId, const std::string& username);
-        std::string toString() const;
+            //Destructor:
+            ~InventoryManager() = default; //thought of implementing a manual destructor, but that -
+            //seems unnecessary due to the defualt cpp RAII implementations of our used objects here...
+            //
 
-        friend std::ostream& operator<<(std::ostream& os, const InventoryManager& IM);//:
-        //a more standard way of overloading the "<<" operator. no need for "getter" methods,
-        //grants access to all private fields and methods for convenience.
+            //Public methods:
+            std::string listItems();
+            void borrowItem(int itemId, const std::string& username);
+            void returnItem(int itemId, const std::string& username);
+            void waitUntilAvailable(int itemId, const std::string& username);
+            std::string toString() const;
 
-        //
-};
+            friend std::ostream& operator<<(std::ostream& os, const InventoryManager& IM);//:
+            //a more standard way of overloading the "<<" operator. no need for "getter" methods,
+            //grants access to all private fields and methods for convenience.
+
+            //
+    };
+}
 
 #endif //INVENTORYMANAGER_H
