@@ -1,9 +1,9 @@
 <build>: -<status>:    3xplain std::move in IM -(X).
 
 server main: 
-write global log function -(V). create log file next to the executable -(X).
-main *argv[] receiving parameters: -(X).
- [0] starting port number -(X) (default: 8080).
+write global log function -(V). create log file next to the executable -(V).
+main *argv[] receiving parameters: -(V).
+ [0] starting port number -(V) (default: 8080).
  [1] max clients -(X) (default: 10).
 Timeout timer that throws Timeout_exception for each thread-(X).
 {server function names : IM functions} <unordered_map>, like python's oop implementation -(X).
@@ -18,9 +18,4 @@ send error/exception messages to client -(X).
 
 
 client main:
-
-
-questionable:
-should Network_Exception hault the thread until Timeout_exception kills process? -(X).
-
 
