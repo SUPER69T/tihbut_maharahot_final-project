@@ -89,17 +89,31 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& cl
     bool is_authenticated = false; //checking whether the user sent an entry - "Hello" message. 
     std::string username; 
 
-    //Process-client commands:
+    //variable initializations for the while loop:
+    //---
+    bool check_username = true; //to authenticating the username.
+    std::string line;
+    std::string command;
+    std::string arg;
+    int itemID;
+    //a cute alternative to switch-case:
+            enum class Command {LIST, BORROW, RETURN, WAIT, QUIT};
+
+            //a python-style helper map:
+            std::map<std::string, Command> commandMap = {
+                {"LIST", Command::LIST},
+                {"BORROW", Command::BORROW},
+                {"RETURN", Command::RETURN},
+                {"WAIT", Command::WAIT},
+                {"QUIT", Command::QUIT}
+            };
+    //---
+
+    //Process-client commands:         
     while(true){
         try{
-            bool check_username = true; //to authenticating the username.
-
-            std::string line;
-
             if(!recv_line(client_fd, line, 4096)) break; //a check that closes the socket if the client disconnected. 
 
-            std::string command;
-            std::string arg;
             size_t space_pos = line.find(' '); //finds 'space' and splits into: command and argument.
 
             if(space_pos != std::string::npos){ //if there is space we take the first half to be the commend and the second half to be the argument.
@@ -156,36 +170,29 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& cl
 //there in no switch-case for strings in cpp? really??
 //____________________________________________________________________________________________________
 
-            //a cute alternative to switch-case:
-            enum class Command {LIST, BORROW, RETURN, WAIT, QUIT};
-
-            //a python-style helper map:
-            std::map<std::string, Command> commandMap = {
-                {"LIST", Command::LIST},
-                {"BORROW", Command::BORROW},
-                {"RETURN", Command::RETURN},
-                {"WAIT", Command::WAIT},
-                {"QUIT", Command::QUIT}
-            };
-
+            //-----
             switch (commandMap[command]){
+
+                //---
                 //shows the list of items: 
-                case Command::LIST:
+                case Command::LIST:{
                     //gets the list of items from inventory:
                     std::string response = inventory.listItems();
                     //sends the response to the client:
                     send_all(client_fd,response+"\n");
                     break;
+                }
+                //---
 
+                //---
                 //borrow an item:
-                case Command::BORROW:
-                    int itemID1;
+                case Command::BORROW:{
                     try{
                         //converts the argument into an integer:
-                        itemID1 = std::stoi(arg);
+                        itemID = std::stoi(arg);
                         //attempts to borrow the item from the InventoryManager:
-                        inventory.borrowItem(itemID1, username);
-                        send_all(client_fd, "OK BORROW "+std::to_string(itemID1) + "\n");
+                        inventory.borrowItem(itemID, username);
+                        send_all(client_fd, "OK BORROW "+std::to_string(itemID) + "\n");
                     }
                     catch(const std::invalid_argument&){
                         //if the argument is not a valid integer:
@@ -196,15 +203,17 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& cl
                         send_all(client_fd, e.what());
                     }
                     break;
+                }
+                //---
 
+                //---
                 //returns an item:
-                case Command::RETURN:
-                    int itemID2;
+                case Command::RETURN:{
                     try{
                         //converts the argument into an integer:
-                        itemID2 = std::stoi(arg);
-                        inventory.returnItem(itemID2, username);
-                        send_all(client_fd, "OK RETURN " + std::to_string(itemID2) + "\n");
+                        itemID = std::stoi(arg);
+                        inventory.returnItem(itemID, username);
+                        send_all(client_fd, "OK RETURN " + std::to_string(itemID) + "\n");
                     }
                     //catches if the argument is not a valid integer:
                     catch(const std::invalid_argument&){
@@ -215,16 +224,18 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& cl
                         send_all(client_fd, e.what());
                     }
                     break;
+                }
+                //---
 
-                 //waits until an item is available:
-                case Command::WAIT:
-                    int itemID3;
+                //---
+                //waits until an item is available:
+                case Command::WAIT:{
                     try{
-                        itemID3 = std::stoi(arg);
+                        itemID = std::stoi(arg);
 
                         // the thread will wait until the item is available its not good in the real life scenario but for this project is ok(can make a long queue )
-                        inventory.waitUntilAvailable(itemID3, username);
-                        send_all(client_fd, "OK AVAILABLE " + std::to_string(itemID3) + "\n");
+                        inventory.waitUntilAvailable(itemID, username);
+                        send_all(client_fd, "OK AVAILABLE " + std::to_string(itemID) + "\n");
                     }
                     catch(const std::invalid_argument&){
                         send_all(client_fd, "ERR PROTOCOL invalid_id\n");
@@ -233,12 +244,18 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& cl
                         send_all(client_fd, e.what());
                     }
                     break;
+                }
+                //---
 
+                //---
                 //stops the connection between the server and the client:
-                case Command::QUIT:
+                case Command::QUIT:{
                     send_all(client_fd, "OK QUIT\n");
                     break;
+                }
+                //---
             }
+            //-----
             
         }
         catch (const std::invalid_argument&){
