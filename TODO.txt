@@ -1,4 +1,4 @@
-<build>: -<status>:    txplain std::move in timeout_timer class -(X).
+<build>: -<status>:    3xplain std::move in IM -(X).
 
 server main: 
 write global log function -(V). create log file next to the executable -(X).
@@ -21,6 +21,6 @@ client main:
 
 
 questionable:
-"available sockets" (using: <unordered_map>) -(X).
-in-progress threads -(X) + semaphore -(X).
+should Network_Exception hault the thread until Timeout_exception kills process? -(X).
+
 

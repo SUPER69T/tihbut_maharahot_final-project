@@ -1,3 +1,4 @@
+//threaded timeout timer:
 #ifndef THREADED_T_TIMER_HPP
 #define THREADED_T_TIMER_HPP
 
@@ -6,15 +7,23 @@
 #include <thread>
 #include <atomic>
 
-class timeout_timer{
+class threaded_t_timer {
 private:
-    std::thread watcher_thread;
-    std::string name;
+    std::string process_name;
+    std::chrono::seconds timeout_duration;
+    int interval; //allows extra modification.
     
+    // Tracks the current "start" of the countdown
+    std::atomic<std::chrono::steady_clock::time_point> start_time;
+    std::atomic<bool> active{true};
+    std::thread watcher;
+
 public:
-    //Starts a background thread immediately:
-    timeout_timer(std::chrono::seconds timeout, std::string timer_name);
-    ~timeout_timer(); // Ensures thread joins/detaches safely
+    //constructor + destructor:
+    threaded_t_timer(const std::string process_name, std::chrono::seconds timeout, const int check_interval_ms);
+    ~threaded_t_timer(); //ensures the thread joins/detaches safely.
+    //
+    void reset_timer(); //updates start_time to "now".
 };
 
-#endif //THREADED_T_TIMER_HPP
+#endif

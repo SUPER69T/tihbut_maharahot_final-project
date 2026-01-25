@@ -17,7 +17,7 @@ void send_all(int fd, const std::string& msg){
         //ssize_t n - possible values and meaning:
         //(0 < n): the amount of bytes sent by send() in the current while-loop iteration.
         //
-        //(n = 0): the connection was closed normally(the receiver sent the graceful shutdown signal[FIN{FIN is a special flag} = 1]).
+        //(n = 0): the connection was closed gracefully(the receiver sent the graceful shutdown signal[FIN{FIN is a special flag} = 1]).
         //
         //(n = -1): an error has been thrown. possible errors:
         //__________________________________________________________________________________________________________________________|
@@ -47,8 +47,8 @@ void send_all(int fd, const std::string& msg){
         return;
         }
         else if(n <= 0){// = if an error is thrown / the connection is closed...
-            if(n != 11 | n != 35){
-                throw Socket_Exception("send_all()", errno);
+            if(n != 11 | n != 35){ //11 = EAGAIN(in linux), 35 = EAGAIN(in macOS/BSD).
+                throw Socket_Exception("send_all() function in handle_client.cpp.", errno);
             }
         }
         else sent += n; //continuing the iteration - there are more bytes to be transferred. 
@@ -65,7 +65,7 @@ bool recv_line(int fd, std::string& out, size_t max_len = 4096){
         //a better approach would involve buffering larger chunks of bytes each time and keeping track of the -
         //current pos-index location on the buffered input stream. 
 
-        if(n == 0) return false; //the connection was closed normally.
+        if(n == 0) return false; //the connection was closed gracefully.
         if(n < 0){ //best practice would adding additional checked conditions inside try-catch blocks for debugging.
             return false; 
         }
@@ -93,7 +93,7 @@ void handle_client(int client_fd, Store::InventoryManager& inventory){
 
         std::string line;
 
-        if(!recv_line(client_fd, line, 4096)) break; //the client disconnected 
+        if(!recv_line(client_fd, line, 4096)) break; //a check that closes the socket if the client disconnected. 
 
         // Split command and argument we need how to message will come
         std::string command;
@@ -153,7 +153,7 @@ void handle_client(int client_fd, Store::InventoryManager& inventory){
         else if(command=="LIST"){
 
             // Get the list of items from inventory
-            std::string response=inventory.listItems();
+            std::string response = inventory.listItems();
 
             // Send the response to the client
             send_all(client_fd,response+"\n");

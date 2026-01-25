@@ -17,7 +17,8 @@ namespace Store{
         total_IMs++;
         this->IM_Id = total_IMs;
     } 
-    InventoryManager::InventoryManager(const std::vector<Item>& items) : items(items){} //Item-type vector-reference receiving constructor.
+    InventoryManager::InventoryManager(const std::vector<Item>& items) : items(std::move(items)){} //Item-type vector-reference receiving constructor.
+    //std::move: a move semantic
     //
 
     //Private methods:

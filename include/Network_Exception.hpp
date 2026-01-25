@@ -26,7 +26,7 @@ class Network_Exception : public std::runtime_error{
     public:
         explicit Network_Exception(const std::string& msg, int err) //input: (message + the compiler's error code).
         : std::runtime_error(format_message(msg, err)), //:
-        error_code(err) {log_error();} //logging the message on every Network_Exception instanciation. 
+        error_code(err){log_error();} //logging the message on every Network_Exception instanciation. 
 
         //implemented mainly for the practice itself:
         int get_code() const noexcept {return error_code;} //a method used for manual errno if-condition checking in a "catch" block where the exception is -
@@ -63,33 +63,33 @@ class Network_Exception : public std::runtime_error{
         }
         //}
 
-            //Helper to handle thread-safe string conversion:
-            static std::string format_message(const std::string& msg, const int err){
-                char buf[256];
-                return std::string(strerror_r(err, buf, sizeof(buf))) + ": " + msg; //:
-                //strerror_r is a thread-safe alternative to strerror.
-            }
+        //Helper to handle thread-safe string conversion:
+        static std::string format_message(const std::string& msg, const int err){
+            char buf[256];
+            return std::string(strerror_r(err, buf, sizeof(buf))) + ": " + msg; //:
+            //strerror_r is a thread-safe alternative to strerror.
+        }
     };
 
 //a Network_Exception's child- "Bind" Error:
 class Bind_Exception : public Network_Exception{
     public:
         explicit Bind_Exception(const std::string& msg, const int err) 
-        : Network_Exception("Bind Error: " + msg, err) {}
+        : Network_Exception("Bind Error: " + msg, err){}
     };
 
 //a Network_Exception's child- "Timeout" Error:
 class Timeout_Exception : public Network_Exception{
     public:
         explicit Timeout_Exception(const std::string& msg, const int err) 
-        : Network_Exception("Timeout Error on: " + msg, err) {}
+        : Network_Exception("Timeout Error on: " + msg, err){}
     };
 
 //a Network_Exception's child- "Socket" Error:
 class Socket_Exception : public Network_Exception{
     public:
         explicit Socket_Exception(const std::string& msg, const int err) 
-        : Network_Exception("Socket Error: " + msg, err) {}
+        : Network_Exception("Socket Error: " + msg, err){}
     };
 
 #endif //NETWORK_EXCEPTION_H
