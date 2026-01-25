@@ -32,11 +32,16 @@
 //---
 //
 
+//locking:
+#include <mutex>
+#include <condition_variable>
+//
 //project specific:
 #include <Network_Exception.hpp>
 #include <handle_client.hpp>
 #include <safe_print.hpp>
 #include <threaded_t_timer.hpp>
+#include <t_clients_list.hpp>
 //-
 //don't know why "Store" namespace refuses to be included, instead we're forced into including these two bastards that hate co-operating: 
 #include <Item.hpp>
@@ -74,6 +79,24 @@ int close_main(const int& server_fd, const int& err){
     close(server_fd);
     return err;
 }
+/*
+bool is_timeout_reached(threaded_t_timer& timer){
+    std::mutex mtx;
+    std::unique_lock<std::mutex> ul(mtx);
+    std::condition_variable cv;
+    if(cv.wait(ul, [&timer](){timer.is_expired();}) == true){
+        throw Socket_Exception(timer.get_p_name() + "'s timeout_timer ran out.", 0); //:
+        //passing 0 as an errno-field for it not to print the wrong type of error... 
+    }
+}
+*/
+/*
+bool is_timeout_reached(threaded_t_timer timer){
+    if(!timer.is_expired()) return true;
+    throw Socket_Exception(timer.get_p_name() + "'s timeout_timer ran out.", 0); //:
+    //passing 0 as an errno-field for it not to print the wrong type of error... 
+}
+*/
 
 //-----
 //MAIN STARTS HERE:
@@ -85,12 +108,12 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
     try{ //the entire main is inside a try block for catching the Timeout_Exception.
 
         //immediately starting the first timeout timer:
-        threaded_t_timer timer1(std::chrono::seconds(20), "server startup timer."); 
+        threaded_t_timer timer1("main timer", std::chrono::seconds(20), 100); 
         //
 
         //default aegv parameters:
         int prt = 8080;
-        int listen_counter = 20; //max amount of connections that can be astablished. important because we are using blocking socketing.
+        int clients_limit = 20; //max amount of connections that can be astablished. important because we are using blocking socketing.
         //
 
         if(argc < 2){ //argc = 1.
@@ -103,12 +126,14 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         }
         else if(argc < 4){ //argc = 3.
             prt = std::stoi(argv[1]);
-            listen_counter = std::stoi(argv[2]);
+            clients_limit = std::stoi(argv[2]);
         }
         else{ //3 < argc.
             std::cerr << "Too many arguments specified.\n" << std::endl;
             return 1;
         }
+
+        t_clients_list clients(static_cast<size_t>(clients_limit));
 
         //Creating an InventoryManager instance:
         //-----
@@ -135,7 +160,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         //
         //protocol: 0 = Default Protocol: Because you requested a stream socket over IPv4, the OS defaults to TCP (IPPROTO_TCP).
 
-        timer1.check_timeout(); //1
+        timer1.reset_timer(); //1
         
         //modified socket behavior to allow immediate reuse of the port(Gemini's implementation...):
         //-------
@@ -144,7 +169,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         //-------
         //-----
 
-        timer1.check_timeout(); //2
+        timer1.reset_timer(); //2
 
         //2: (configuring the address):
         //-----
@@ -169,7 +194,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         //(from the CPU's order[Little-Endian in most CPUs{intel/AMD}] to the Network's order[Big-Endian in most IP types{TCP/UDP}]).
         //-----
 
-        timer1.check_timeout(); //3
+        timer1.reset_timer(); //3
 
         //3: (binding to the socket):
         //-----
@@ -198,7 +223,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         }
         //-----
 
-        timer1.check_timeout(); //4
+        timer1.reset_timer(); //4
 
         //4. (listening to clients):
         //-----
@@ -207,12 +232,11 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         safe_print("listening on port - " + std::to_string(prt) + "...");
         //-----
 
-        //probably as good as any other time to set the first main-timeout end-point:
-            
-        //
+        timer1.reset_timer(); //5
 
         //5. (accepting a connection): 
         //-----
+        std::string current_name;
         //Acceptting and handling a client's connection:
         while(true){
             try{ // -> here we try to catch both the accept + thread, and the handle_client exceptions.
@@ -229,7 +253,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
                 }
             
                 //Creating a new thread in order to handle each client as concurrent processes:
-                std::thread(handle_client, client_fd, std::ref(inventory)).detach(); //(sending inventory by reference...).
+                std::thread(handle_client, std::ref(client_fd), std::ref(clients), std::ref(current_name), std::ref(inventory)).detach(); //(sending inventory by reference...).
                 //*Note - this type of manual socket-opening technique we use here is called "Blocking-socket opening".
                 //the reason it is discouraged(compared to non-Blocking alternatives like using select()/poll()/epoll()) is because - 
                 //every operation we do on a single socket(read/write...) haults the entire thread it occupies, thus enabling only the creation of - 

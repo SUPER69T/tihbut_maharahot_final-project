@@ -6,6 +6,7 @@
 #include <string>
 #include "InventoryManager.hpp"
 #include <Network_Exception.hpp>
+#include <t_clients_list.hpp>
 
 
 //a safe sending of an entire string:
@@ -82,7 +83,7 @@ bool is_number(const std::string& s){
     return true;
 }
 
-void handle_client(int client_fd, Store::InventoryManager& inventory){
+void handle_client(const int client_fd, t_clients_list& clients, std::string& client_name, Store::InventoryManager& inventory){
 
     bool is_authenticated = false; //checking whether the user sent an entry - "Hello" message. 
     std::string username; 
@@ -95,29 +96,29 @@ void handle_client(int client_fd, Store::InventoryManager& inventory){
 
         if(!recv_line(client_fd, line, 4096)) break; //a check that closes the socket if the client disconnected. 
 
-        // Split command and argument we need how to message will come
         std::string command;
         std::string arg;
-        size_t space_pos=line.find(' '); //find space to split command and argument
+        size_t space_pos = line.find(' '); //finds 'space' and splits into: command and argument.
 
-        if(space_pos!=std::string::npos){ // if there is space we take the first half to be the commend and the second to be the argument
+        if(space_pos != std::string::npos){ //if there is space we take the first half to be the commend and the second half to be the argument.
 
-            command=line.substr(0,space_pos);
-            arg=line.substr(space_pos+1);
+            command = line.substr(0,space_pos);
+            arg = line.substr(space_pos+1);
         }
 
         else{
-            command=line; //if the is no space the whole line is the command(like LIST or QUIT)
+            command = line; //if the is no space the whole line is the command(like LIST or QUIT)
         }
 
-        if (command=="HELLO"){ //first command to authenticate the user
-            username=arg; 
+        if (command == "HELLO"){ //first command to authenticate the user.
+            username = arg; 
+            clients.add_client(username);
 
-            if(username.empty()){ //check if the username is missing
+            if(username.empty()){ //checks if the username is missing.
 
                 send_all(client_fd, "ERR PROTOCOL missing_username\n");
 
-                check_username=false;
+                check_username = false;
 
                 continue; 
             }
@@ -160,17 +161,17 @@ void handle_client(int client_fd, Store::InventoryManager& inventory){
     
         }
         // Borrow an item
-        else if(command=="BORROW"){
+        else if(command == "BORROW"){
 
             int itemID;
             try{
                 // Convert argument to integer
-                itemID=std::stoi(arg);
+                itemID = std::stoi(arg);
 
                 // Attempt to borrow the item going to InventoryManager to check if is available if it is we use the borrow method in Item
-                inventory.borrowItem(itemID,username);
+                inventory.borrowItem(itemID, username);
 
-                send_all(client_fd, "OK BORROW "+std::to_string(itemID)+"\n");
+                send_all(client_fd, "OK BORROW "+std::to_string(itemID) + "\n");
             }
             catch(const std::invalid_argument&){
 
@@ -184,7 +185,7 @@ void handle_client(int client_fd, Store::InventoryManager& inventory){
         }
 
         // Return an item
-        else if(command=="RETURN"){
+        else if(command == "RETURN"){
 
             int itemID;
             try{
@@ -193,7 +194,7 @@ void handle_client(int client_fd, Store::InventoryManager& inventory){
 
                 inventory.returnItem(itemID,username);
 
-                send_all(client_fd, "OK RETURN "+std::to_string(itemID)+"\n");
+                send_all(client_fd, "OK RETURN " + std::to_string(itemID) + "\n");
             }
 
             //if the argument is not a valid integer
@@ -208,15 +209,15 @@ void handle_client(int client_fd, Store::InventoryManager& inventory){
         }
 
         // Wait until an item is available
-        else if(command=="WAIT"){
+        else if(command == "WAIT"){
 
             int itemID;
             try{
-                itemID=std::stoi(arg);
+                itemID = std::stoi(arg);
 
                 // the thread will wait until the item is available its not good in the real life scenario but for this project is ok(can make a long queue )
-                inventory.waitUntilAvailable(itemID,username);
-                send_all(client_fd, "OK AVAILABLE "+std::to_string(itemID)+"\n");
+                inventory.waitUntilAvailable(itemID, username);
+                send_all(client_fd, "OK AVAILABLE " + std::to_string(itemID) + "\n");
             }
             catch(const std::invalid_argument&){
                 send_all(client_fd, "ERR PROTOCOL invalid_id\n");
