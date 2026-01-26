@@ -58,7 +58,7 @@ void send_all(int fd, const std::string& msg){
 }
 
 //TCP framing of each byte at a time, with a max of: default=1024 bytes, until we reach - '\n':
-bool recv_line(int fd, std::string& out, size_t max_len = 4096){
+bool recv_line(const int fd, std::string& out, size_t max_len = 4096){
     out.clear();
     char c;
     while(out.size() < max_len) {
@@ -107,7 +107,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& cl
                 {"WAIT", Command::WAIT},
                 {"QUIT", Command::QUIT}
             };
-    //---
+    
 
     //Process-client commands:         
     while(true){

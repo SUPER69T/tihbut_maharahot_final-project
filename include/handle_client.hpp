@@ -6,16 +6,18 @@
 #include <unistd.h>
 #include <string>
 #include "InventoryManager.hpp"
+#include <t_clients_list.hpp>
+
+//sending an entire message:
+void send_all(const int fd, const std::string& msg);
 
 //receiving a line:
-bool recv_line(int fd, std::string& out);
+bool recv_line(const int fd, std::string& out);
 
-//Sending an entire message:
-void send_all(int fd, const std::string& msg);
-
-//Checking whether a string is all digits:
+//checking whether a string is all digits:
 bool is_number(const std::string& s);
 
 //main client handling:
-void handle_client(int client_fd, Store::InventoryManager& inventory);
+void handle_client(const int client_fd, t_clients_list& clients, std::string& client_name, Store::InventoryManager& inventory);
+
 #endif //HANDLE_CLIENT_H

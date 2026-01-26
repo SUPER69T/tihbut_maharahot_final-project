@@ -15,7 +15,7 @@ InventoryManager -(V).
 implement new exception type for: 1.item 2.manager -(V).
 exceptions stack -(V) + read history exception-log for each client -(X).
 send error/exception messages to client -(X).
-
+add a queue(threaded?) to safe_print -(X).
 
 client main:
 

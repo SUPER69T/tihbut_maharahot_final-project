@@ -8,6 +8,8 @@
 //POSIX + threading:
 #include <unistd.h>
 #include <thread>
+//
+
 //---
 #include <chrono> //using here:
 //std::chrono::seconds = a time duration type, represents time interval with a precision of one second.
@@ -258,7 +260,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
                 //the reason it is discouraged(compared to non-Blocking alternatives like using select()/poll()/epoll()) is because - 
                 //every operation we do on a single socket(read/write...) haults the entire thread it occupies, thus enabling only the creation of - 
                 //a single socket on each thread, making it much slower and inefficient for robust programs with many clients to handle concurrently.
-            }
+            } //[handle_client, std::ref(client_fd), std::ref(clients), std::ref(current_name), std::ref(inventory)],[const int client_fd, t_clients_list& clients, std::string& client_name, Store::InventoryManager& inventory]
             catch (const Socket_Exception& e){ //most likely recoverable:
                 continue; 
             }
