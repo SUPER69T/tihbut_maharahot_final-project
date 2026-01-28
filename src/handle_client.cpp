@@ -8,6 +8,7 @@
 #include "InventoryManager.hpp"
 #include "Network_Exception.hpp"
 #include "t_clients_list.hpp"
+#include "Thread_safe_logger.hpp"
 
 
 //a safe sending of an entire string:

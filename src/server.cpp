@@ -41,7 +41,7 @@
 //project specific:
 #include "Network_Exception.hpp"
 #include "handle_client.hpp"
-#include "safe_print.hpp"
+#include "Thread_safe_logger.hpp"
 #include "threaded_t_timer.hpp"
 #include "t_clients_list.hpp"
 //-
@@ -70,13 +70,13 @@
 
 //just for fun...:
 int close_main(const int& server_fd, const int& err){ 
-    safe_print("Closing the server in:");
+    Thread_safe_logger::getInstance().log("Closing the server in:");
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    safe_print("3...");
+    Thread_safe_logger::getInstance().log("3...");
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    safe_print("2...");
+    Thread_safe_logger::getInstance().log("2...");
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    safe_print("1...\ngoodbye! <O_O>");
+    Thread_safe_logger::getInstance().log("1...\ngoodbye! <O_O>");
     std::this_thread::sleep_for(std::chrono::seconds(1));
     close(server_fd);
     return err;
@@ -104,6 +104,9 @@ bool is_timeout_reached(threaded_t_timer timer){
 //MAIN STARTS HERE:
 //argc: argument count, argv: argument vector.
 int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]].
+
+    Thread_safe_logger& logger = Thread_safe_logger::getInstance(); //initialization of the one and only -
+    //singleton - Thread_safe_logger-object instance for the entire program's life-time.
 
     int server_fd;
 
@@ -139,15 +142,23 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
 
         //Creating an InventoryManager instance:
         //-----
-        std::vector<Store::Item> items_vec = {Store::Item(1, "Camera"),
-        Store::Item(2, "Tripod"), Store::Item(3, "Laptop"),
-        Store::Item(4, "Projector"), Store::Item(5, "Microphone"),
-        Store::Item(6, "Speaker"), Store::Item(7, "HDMI_Cable"),
-        Store::Item(8, "Ethernet_Cable"), Store::Item(9, "Keyboard"),
-        Store::Item(10, "Mouse"), Store::Item(11, "Monitor"),
-        Store::Item(12, "USB_Hub"), Store::Item(13, "Power_Bank")};
-
-        Store::InventoryManager inventory(items_vec); //initiating an InventoryManager object called "inventory" with the items_vec vector of Item-type objects.
+        std::vector<Store::Item> items_vec;
+        items_vec.reserve(13); //Pre-allocates memory block to avoid reallocations. :).
+        items_vec.emplace_back(1, "Camera");
+        items_vec.emplace_back(2, "Tripod");
+        items_vec.emplace_back(3, "Laptop");
+        items_vec.emplace_back(4, "Projector");
+        items_vec.emplace_back(5, "Microphone");
+        items_vec.emplace_back(6, "Speaker");
+        items_vec.emplace_back(7, "HDMI_Cable");
+        items_vec.emplace_back(8, "Ethernet_Cable");
+        items_vec.emplace_back(9, "Keyboard");
+        items_vec.emplace_back(10, "Mouse");
+        items_vec.emplace_back(11, "Monitor");
+        items_vec.emplace_back(12, "USB_Hub");
+        items_vec.emplace_back(13, "Power_Bank");
+        
+        Store::InventoryManager inventory(std::move(items_vec)); //initiating an InventoryManager object called "inventory" with the items_vec vector of Item-type objects.
         //-----
 
         
@@ -231,7 +242,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         //-----
         int backlog = 20;
         listen(server_fd, backlog); //backlog = limiting the in-progress connections queue size.
-        safe_print("listening on port - " + std::to_string(prt) + "...");
+        Thread_safe_logger::getInstance().log("listening on port - " + std::to_string(prt) + "...");
         //-----
 
         timer1.reset_timer(); //5
