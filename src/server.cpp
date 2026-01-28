@@ -39,15 +39,15 @@
 #include <condition_variable>
 //
 //project specific:
-#include <Network_Exception.hpp>
-#include <handle_client.hpp>
-#include <safe_print.hpp>
-#include <threaded_t_timer.hpp>
-#include <t_clients_list.hpp>
+#include "Network_Exception.hpp"
+#include "handle_client.hpp"
+#include "safe_print.hpp"
+#include "threaded_t_timer.hpp"
+#include "t_clients_list.hpp"
 //-
 //don't know why "Store" namespace refuses to be included, instead we're forced into including these two bastards that hate co-operating: 
-#include <Item.hpp>
-#include <InventoryManager.hpp>
+#include "Item.hpp"
+#include "InventoryManager.hpp"
 //-
 //-----
 

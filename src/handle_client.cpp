@@ -1,13 +1,13 @@
-#include <handle_client.hpp>
 #include <stdexcept>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <string>
-#include "InventoryManager.hpp"
-#include <Network_Exception.hpp>
-#include <t_clients_list.hpp>
 #include <map>
+#include "handle_client.hpp"
+#include "InventoryManager.hpp"
+#include "Network_Exception.hpp"
+#include "t_clients_list.hpp"
 
 
 //a safe sending of an entire string:

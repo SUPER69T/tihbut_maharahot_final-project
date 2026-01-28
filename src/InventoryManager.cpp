@@ -1,12 +1,12 @@
 #include "InventoryManager.hpp"
 #include "IM_exception.hpp"
+#include "Item_exception.hpp"
 #include "Item.hpp"
 #include <string>
 #include <vector> //:
 //would have used #include <unordered_map> instead of the <vector>...
 #include <mutex>
 #include <condition_variable>
-#include <Item_exception.hpp>
 
 namespace Store{
 

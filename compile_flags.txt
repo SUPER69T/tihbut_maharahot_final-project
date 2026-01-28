@@ -11,3 +11,4 @@
 -I/usr/include
 
 -Wall
+-Wextra

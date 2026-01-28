@@ -24,10 +24,16 @@ class Network_Exception : public std::runtime_error{
         int error_code; //used to save-in-place the error code errno returns, a good idea for multi-threading exception implementation.
 
     public:
+        //constructor:
         explicit Network_Exception(const std::string& msg, int err) //input: (message + the compiler's error code).
         : std::runtime_error(format_message(msg, err)), //:
         error_code(err){log_error();} //logging the message on every Network_Exception instanciation. 
+        //   
 
+        //virtual destructor:
+        virtual ~Network_Exception() noexcept = default;
+        //
+        
         //implemented mainly for the practice itself:
         int get_code() const noexcept {return error_code;} //a method used for manual errno if-condition checking in a "catch" block where the exception is -
         //thrown in order to apply an alternative operation rather than Network_Exception's standard handling(implemented in - server.cpp, line ~ 136).

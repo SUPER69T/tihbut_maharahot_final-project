@@ -17,7 +17,7 @@ namespace Store{
         //multiple occurrences of Item_exception and doesn't cause a compilation error.
         inline static std::vector<std::string> history;
         
-
+        //constructor:
         //explicit: for clarity of intent -> requires the exception object initiation before passing a string.
         explicit IM_exception(const std::string& username, const std::string& message) : msg(username + ": " + message){
             history.push_back(username + ": " + message);
@@ -36,6 +36,11 @@ namespace Store{
         char*: the main 2 reasons for returning a pointer is for the possibility of the message being a -
         primitive type, and because it was declared so in the original exception base class this way...  
         */
+        //
+
+        //virtual destructor(because Item_exception inherits from this class):
+        virtual ~IM_exception() noexcept = default;
+        //
         virtual const char* what() const noexcept override{ //never actually used. 
             return msg.c_str();
         };

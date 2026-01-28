@@ -9,3 +9,5 @@ void safe_print(const std::string& msg) {
     std::lock_guard<std::mutex> lock(cout_mutex);
     std::cout << msg << std::endl;
 }
+
+
