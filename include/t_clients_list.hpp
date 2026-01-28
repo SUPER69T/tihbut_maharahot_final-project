@@ -8,21 +8,21 @@
 
 class t_clients_list{
         private:
-            //fields:  
-            std::mutex mtx;
-            std::condition_variable cv; 
-            std::vector<std::pair<std::string, bool>> clients_list; //vectors support RAII.
-            //
+        //fields:  
+        std::mutex mtx;
+        std::condition_variable cv; 
+        std::vector<std::pair<std::string, bool>> clients_list; //vectors support RAII.
+        //
 
         public:
-            //constructors:
-            t_clients_list(const size_t& size); //empty vector constructor.
-            t_clients_list(const std::vector<std::pair<std::string, bool>>, const size_t& size); 
+        //constructors:
+        t_clients_list(const size_t& size); //empty vector constructor.
+        t_clients_list(const std::vector<std::pair<std::string, bool>>, const size_t& size); 
 
-            //public methods:
-            bool add_client(std::string client_name);
-            bool remove_client(std::string client_name);
-            //
+        //public methods:
+        bool add_client(std::string client_name);
+        bool remove_client(std::string client_name);
+        //
     };
 
 #endif //T_CLIENTS_LIST_HPP

@@ -14,6 +14,8 @@
 #include <filesystem> //::path - used for: __FILE__ + .parent_path().
 //---
 
+#include "Thread_safe_logger.hpp"
+
 //gemini's help for making a hirarchy-exceptions structure:
 //this exception class is used for server-network-sided exception throwing, meaning the client does not get access to the exception-logging file.
 //{
@@ -27,7 +29,10 @@ class Network_Exception : public std::runtime_error{
         //constructor:
         explicit Network_Exception(const std::string& msg, int err) //input: (message + the compiler's error code).
         : std::runtime_error(format_message(msg, err)), //:
-        error_code(err){log_error();} //logging the message on every Network_Exception instanciation. 
+        error_code(err){
+            log_error(); //logging the message on every Network_Exception instanciation. 
+            Thread_safe_logger::getInstance().log(this->what()); //printing the error message.
+        } 
         //   
 
         //virtual destructor:
@@ -37,16 +42,12 @@ class Network_Exception : public std::runtime_error{
         //implemented mainly for the practice itself:
         int get_code() const noexcept {return error_code;} //a method used for manual errno if-condition checking in a "catch" block where the exception is -
         //thrown in order to apply an alternative operation rather than Network_Exception's standard handling(implemented in - server.cpp, line ~ 136).
-
-        virtual const char* what() const noexcept override{ //overrides std::runtime_error's what() method. (more detail explained in - IM_exception, line ~ 39).
-            return std::runtime_error::what();
-        };
         
     private:
         //this is one of the only blocks we fully let gemini generate:
         //{
         //Thread-safe logging function that opens and saves into a file:
-        void log_error() const{ 
+        void log_error() const noexcept{ 
             static std::mutex log_mutex; // Shared across all threads
             std::lock_guard<std::mutex> lock(log_mutex); //Locks on entry, unlocks on exit.
 
@@ -62,7 +63,7 @@ class Network_Exception : public std::runtime_error{
             std::ofstream log_file(source_dir / "server_errors.log", std::ios::app); //"server_errors.log" = the name of the logging file.
             //app = append modifier for the stream to write to the end of the file, regardless of the file's pointer position.
             if (log_file.is_open()) {
-                log_file << "[LOG]: " << format_message(this->what(), error_code) << std::endl; //the sole reason we had to override what().
+                log_file << "[LOG]: " << what() << "\n"; 
             } else {
                 std::cerr << "Critical: Could not open log file!"; //cerr does not require explicit flushing because it is unbuffered...
             }
@@ -72,9 +73,21 @@ class Network_Exception : public std::runtime_error{
         //Helper to handle thread-safe string conversion:
         static std::string format_message(const std::string& msg, const int err){
             char buf[256];
-            return std::string(strerror_r(err, buf, sizeof(buf))) + ": " + msg; //:
-            //strerror_r is a thread-safe alternative to strerror.
+            auto result = strerror_r(err, buf, sizeof(buf)); //strerror_r is a thread-safe alternative to strerror.
+            //note on strerror_r: returns an int(0/error code) on XSI, returns char*(a pointer to the message) on GNU:
+            return std::string(get_error_string(result, buf)) + ": " + msg;
         }
+        //gemini's work:
+        //---
+        //Helper for the GNU version (returns the pointer directly)
+        static const char* get_error_string(char* gnu_result, char* /*buf*/){ //buf is unused.
+            return gnu_result;
+        }
+        // Helper for the XSI version (returns the buffer we provided)
+        static const char* get_error_string(int /*xsi_result*/, char* buf){ //xsi is unused.
+            return buf;
+        }
+        //---
     };
 
 //a Network_Exception's child- "Bind" Error:

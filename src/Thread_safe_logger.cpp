@@ -49,7 +49,7 @@ void Thread_safe_logger::processMessages(){
         if(exit) break;
     }
     std::cout << std::flush;
-//-----
 }
+//-----
 
 

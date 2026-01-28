@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include "Thread_safe_logger.hpp"
 
 namespace Store{
 
@@ -19,8 +20,10 @@ namespace Store{
         
         //constructor:
         //explicit: for clarity of intent -> requires the exception object initiation before passing a string.
-        explicit IM_exception(const std::string& username, const std::string& message) : msg(username + ": " + message){
-            history.push_back(username + ": " + message);
+        explicit IM_exception(const std::string& username, const std::string& message) 
+            : msg(username + ": " + message){
+            history.push_back(msg);
+            Thread_safe_logger::getInstance().log(msg);
         }
         /*
         virtual: because "what()" method is declared as a virtual method in the base -
@@ -46,7 +49,7 @@ namespace Store{
         };
 
         static void print_history(){
-            std::cout << "---InventoryManager_exceptions_history---\n"
+            std::cout << "---InventoryManager_exceptions-history_log---\n"
             "Username:       Message:\n\n" << std::endl;
 
             for (const auto& error : history){

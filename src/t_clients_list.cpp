@@ -4,6 +4,7 @@
 #include <mutex>
 
 //constructors:
+//-----
 t_clients_list::t_clients_list(const size_t& size): clients_list(size){ //empty vector constructor.
     //assigning a default number to each client position and a boolean that represens whether this position is free:
     for(size_t i = 0 ; i < size ; i++){
@@ -18,9 +19,10 @@ t_clients_list::t_clients_list(const std::vector<std::pair<std::string, bool>> v
         clients_list[i].second = vec[i].second;
     }
 }
-//
+//-----
 
 //public methods:
+//-----
 bool t_clients_list::add_client(std::string client_name){
     std::lock_guard<std::mutex> lock(mtx); 
     bool added = false;
@@ -34,7 +36,6 @@ bool t_clients_list::add_client(std::string client_name){
     return added;
 }
 
-
 bool t_clients_list::remove_client(std::string client_name){
     std::lock_guard<std::mutex> lock(mtx); 
     bool removed = false;
@@ -47,5 +48,5 @@ bool t_clients_list::remove_client(std::string client_name){
     }
     return removed;
 }
-//
+//-----
 
