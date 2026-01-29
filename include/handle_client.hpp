@@ -9,7 +9,7 @@
 #include <t_clients_list.hpp>
 
 //sending an entire message:
-void send_all(const int fd, const std::string& msg);
+void send_all(const int fd, const std::string& msg, const std::string& confirmed_name);
 
 //receiving a line:
 bool recv_line(const int fd, std::string& out);
