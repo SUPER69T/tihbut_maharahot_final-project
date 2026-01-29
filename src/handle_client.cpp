@@ -97,6 +97,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& cl
     std::string command;
     std::string arg;
     int itemID;
+
     //a cute alternative to switch-case:
             enum class Command {LIST, BORROW, RETURN, WAIT, QUIT};
 
@@ -108,7 +109,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& cl
                 {"WAIT", Command::WAIT},
                 {"QUIT", Command::QUIT}
             };
-    
+    //---
 
     //Process-client commands:         
     while(true){
