@@ -18,6 +18,6 @@ bool recv_line(const int fd, std::string& out);
 bool is_number(const std::string& s);
 
 //main client handling:
-void handle_client(const int client_fd, t_clients_list& clients, std::string& client_name, Store::InventoryManager& inventory);
+void handle_client(const int client_fd, t_clients_list& clients, std::string& temp_name, Store::InventoryManager& inventory);
 
 #endif //HANDLE_CLIENT_H

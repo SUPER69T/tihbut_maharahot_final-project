@@ -4,11 +4,13 @@
 #include <unistd.h>
 #include <string>
 #include <map>
+#include <cstdlib>
 #include "handle_client.hpp"
 #include "InventoryManager.hpp"
 #include "Network_Exception.hpp"
+#include "Item_exception.hpp"
+#include "IM_exception.hpp"
 #include "t_clients_list.hpp"
-#include "Thread_safe_logger.hpp"
 
 
 //a safe sending of an entire string:
@@ -51,7 +53,7 @@ void send_all(int fd, const std::string& msg){
         }
         else if(n <= 0){// = if an error is thrown / the connection is closed...
             if(n != 11 | n != 35){ //11 = EAGAIN(in linux), 35 = EAGAIN(in macOS/BSD).
-                throw Socket_Exception("send_all() function in handle_client.cpp.", errno);
+                throw Socket_Exception("ERR PROTOCOL trouble in sending the message.", errno);
             }
         }
         else sent += n; //continuing the iteration - there are more bytes to be transferred. 
@@ -64,7 +66,7 @@ bool recv_line(const int fd, std::string& out, size_t max_len = 4096){
     char c;
     while(out.size() < max_len) {
         ssize_t n = recv(fd, &c, 1, 0); //:
-        //this approach is highly inefficient due to repeatd calls to recv() for every single input character.
+        //this approach is highly inefficient due to repeated calls to recv() for every single input character.
         //a better approach would involve buffering larger chunks of bytes each time and keeping track of the -
         //current pos-index location on the buffered input stream. 
 
@@ -85,77 +87,90 @@ bool is_number(const std::string& s){
     return true;
 }
 
-void handle_client(const int client_fd, t_clients_list& clients, std::string& client_name, Store::InventoryManager& inventory){
+void handle_client(const int client_fd, t_clients_list& clients, std::string& temp_name, Store::InventoryManager& inventory){
 
     bool is_authenticated = false; //checking whether the user sent an entry - "Hello" message. 
-    std::string username; 
 
     //variable initializations for the while loop:
     //---
     bool check_username = true; //to authenticating the username.
+    std::string confirmed_name = temp_name; //unconfirmed yet...
     std::string line;
     std::string command;
-    std::string arg;
+    std::string arg; //used for general-purpose input checking and de-muxing logic.
     int itemID;
+    int rand_int;
+    bool exit_flag = false;
 
     //a cute alternative to switch-case:
-            enum class Command {LIST, BORROW, RETURN, WAIT, QUIT};
+        enum class Command {LIST, BORROW, RETURN, WAIT, QUIT};
 
-            //a python-style helper map:
-            std::map<std::string, Command> commandMap = {
-                {"LIST", Command::LIST},
-                {"BORROW", Command::BORROW},
-                {"RETURN", Command::RETURN},
-                {"WAIT", Command::WAIT},
-                {"QUIT", Command::QUIT}
-            };
+        //a python-style helper map:
+        std::map<std::string, Command> commandMap = {
+            {"LIST", Command::LIST},
+            {"BORROW", Command::BORROW},
+            {"RETURN", Command::RETURN},
+            {"WAIT", Command::WAIT},
+            {"QUIT", Command::QUIT}
+        };
+
+        std::vector<std::string> defaultMessages = {
+    "SORRY, I DID NOT GET THAT, CAN YOU PLEASE REPEAT?\n",
+    "UNKNOWN COMMAND. TRY FOLLOWING INSTRUCTION, MAYBE.\n",
+    "HUH? THAT'S NOT AN OPTION, TRY AGAIN!\n"
+    };
     //---
 
     //Process-client commands:         
     while(true){
         try{
-            //is_authenticated
-            if(!recv_line(client_fd, line, 4096)) break; //a check that closes the socket if the client disconnected. 
-            size_t space_pos = line.find(' '); //finds 'space' and splits into: command and argument.
-            if(space_pos != std::string::npos){ //if there is space we take the first half to be the commend and the second half to be the argument.
-                command = line.substr(0,space_pos);
-                arg = line.substr(space_pos+1);
-            }
-            else{
-                command = line; //if there is no space the whole line is the command(like LIST or QUIT)
-            }
-            if(command == "HELLO"){ //first command to authenticate the user.
-                check_username = true; //reseting the check flag.???
-                username = arg; 
-                clients.add_client(username); //updating the client name in the threaded clients-list.
-                if(username.empty()){ //checks if the username is missing.
-                    send_all(client_fd, "ERR PROTOCOL missing_username\n");
-                    check_username = false;
-                    continue; 
-                }
+            while(true){
+                if(!recv_line(client_fd, line, 4096)){ //a check that closes the socket if the client disconnected or on other various 'recv' errors. 
+                    throw Socket_Exception("ERR PROTOCOL" + confirmed_name + "disconnected from server.", errno);
+                } 
 
-                //making sure that the user only contains letters:
-                for(char c : username){
-                    if(!isalpha(c)){
-                        is_authenticated = false;
-                        send_all(client_fd, "ERR PROTOCOL invalid_username\n");
-                        check_username = false;
-                        break;
+                size_t space_pos = line.find(' '); //finds 'space' and splits into: command and argument.
+
+                if(space_pos != std::string::npos){ //if there is a space we take the first half to be the commend and the second half to be the argument.
+                    command = line.substr(0,space_pos);
+                    arg = line.substr(space_pos+1);
+                }else command = line; //if there is no space the whole line is the command(like LIST or QUIT).
+
+                if(command == "HELLO"){ //first command to authenticate the user.
+                    check_username = true; //reseting the check flag.
+                    if(arg == confirmed_name) break; //continuing to the switch-case statement.
+                    else if(confirmed_name == ""){ //enters this block in case client_name hasn't been declared yet.
+                        if(arg.empty()){ //checks if the username is missing.
+                            send_all(client_fd, "ERR PROTOCOL missing_username.\n");
+                            check_username = false;
+                            continue; 
+                        }
+                        //making sure that the user only contains letters:
+                        for(char c : arg){
+                            if(!isalpha(c)){
+                                is_authenticated = false;
+                                send_all(client_fd, "ERR PROTOCOL invalid_username.\n");
+                                check_username = false;
+                                break;
+                            }
+                        }
+                        //if the username is valid:
+                        if(check_username){
+                            is_authenticated = true; //the user is valid.
+                            send_all(client_fd, "OK HELLO!\n");
+                            clients.add_client(arg); //updating the client name in the threaded clients-list.
+                        }
                     }
+                }  
+                // skips if the user is not authorized:
+                else if(!is_authenticated){
+                    send_all(client_fd, "ERR STATE not_authenticated.\n");
+                    continue;
                 }
-
-                //if the username is valid:
-                if(check_username){
-                    is_authenticated = true; //the user is valid.
-                    send_all(client_fd, "OK HELLO\n");
-                }
-                        
-            }  
-            // skips if the user is not authorized:
-            else if(!is_authenticated){
-                send_all(client_fd, "ERR STATE not_authenticated\n");
-                continue;
             }
+            //converting the argument into an integer:
+            itemID = std::stoi(arg); //used in the switch-case statement for Item/InventoryManager classes.
+
 //moving forward into the switch statment only if is_authenticated is 'true':
 //____________________________________________________________________________________________________
 //there in no switch-case for strings in cpp? really??
@@ -178,10 +193,8 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& cl
                 //---
                 //borrow an item:
                 case Command::BORROW:{
-                    //converts the argument into an integer:
-                    itemID = std::stoi(arg);
                     //attempts to borrow the item from the InventoryManager:
-                    inventory.borrowItem(itemID, username);
+                    inventory.borrowItem(itemID, confirmed_name);
                     send_all(client_fd, "OK BORROW "+std::to_string(itemID) + "\n");
                     break;
                 }
@@ -190,9 +203,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& cl
                 //---
                 //returns an item:
                 case Command::RETURN:{
-                    //converts the argument into an integer:
-                    itemID = std::stoi(arg);
-                    inventory.returnItem(itemID, username);
+                    inventory.returnItem(itemID, confirmed_name);
                     send_all(client_fd, "OK RETURN " + std::to_string(itemID) + "\n");
                     break;
                 }
@@ -201,9 +212,8 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& cl
                 //---
                 //waits until an item is available:
                 case Command::WAIT:{
-                    itemID = std::stoi(arg);
                     //the thread will wait until the item is available. it isn't practical for real life code implementation but for this project it will have to do...:
-                    inventory.waitUntilAvailable(itemID, username);
+                    inventory.waitUntilAvailable(itemID, confirmed_name);
                     send_all(client_fd, "OK AVAILABLE " + std::to_string(itemID) + "\n");
                     break;
                 }
@@ -213,35 +223,43 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& cl
                 //stops the connection between the server and the client:
                 case Command::QUIT:{
                     send_all(client_fd, "OK QUIT\n");
+                    exit_flag = true;
                     break;
                 }
                 //---
 
                 //---
                 default:
-                    send_all(client_fd, "SORRY, I DID NOT GET THAT, CAN YOU PLEASE REPEAT?\n");
+                    rand_int = (rand() % 3); //a random value between - 0, and - 2.
+                    send_all(client_fd, defaultMessages.at(rand_int));
                     break;
                 //---
             }
             //-----
+        }
+        catch(const Store::Item_exception& e){ //acts as a soft-exception in cases related to Item-exceptions.
             
+            send_all(client_fd, std::string("ERR ") + e.what());
+            continue;
         }
-        catch (const std::invalid_argument&){
+        catch(const Store::IM_exception& e){ //acts as a soft-exception in cases related to InventoryManager-exceptions.
+            send_all(client_fd, std::string("ERR ") + e.what());
+            continue;
+        }
+        catch(const Socket_Exception& e){ //acts as a socket-closer in cases of socket-exceptions.
+            send_all(client_fd, e.what());
+            break;
+        }
+        catch(const Timeout_Exception& e){ //acts as a socket-closer in cases of timeout-exceptions.
+            send_all(client_fd, e.what());
+            break;
+        }
+        catch(const std::invalid_argument&){ //acts as a soft-exception in cases related to invalid-arguments.
             send_all(client_fd, "ERR PROTOCOL invalid_id\n");
-            //break;??
+            continue;
         }
-        catch(const std::runtime_error& e){
-            send_all(client_fd, e.what());
-            //break;??
-        }
-        catch (const Socket_Exception& e){
-            send_all(client_fd, e.what());
-            break;
-        }
-        catch (const Timeout_Exception& e){ 
-            send_all(client_fd, e.what());
-            break;
-        }
+
+        if(exit_flag == true) break;
     } 
 
     // Close client connection

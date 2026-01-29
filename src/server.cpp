@@ -69,7 +69,7 @@
 
 
 //just for fun...:
-int close_main(const int& server_fd, const int& err){ 
+int close_main(const int& err){ 
     Thread_safe_logger::getInstance().log("Closing the server in:");
     std::this_thread::sleep_for(std::chrono::seconds(1));
     Thread_safe_logger::getInstance().log("3...");
@@ -78,7 +78,6 @@ int close_main(const int& server_fd, const int& err){
     std::this_thread::sleep_for(std::chrono::seconds(1));
     Thread_safe_logger::getInstance().log("1...\ngoodbye! <O_O>");
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    close(server_fd);
     return err;
 }
 /*
@@ -113,7 +112,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
     try{ //the entire main is inside a try block for catching the Timeout_Exception.
 
         //immediately starting the first timeout timer:
-        threaded_t_timer timer1("main timer", std::chrono::seconds(20), 100); 
+        /////////threaded_t_timer timer1("main timer", std::chrono::seconds(20), 100); 
         //
 
         //default aegv parameters:
@@ -123,11 +122,11 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
 
         if(argc < 2){ //argc = 1.
             std::cerr << "\n" << std::endl;
-            return 1;
+            return close_main(-1);
         }
         else if(argc < 3){ //argc = 2.
             std::cerr << "Specify: port, maxclients.\n" << std::endl;
-            return 1;
+            return close_main(-1);
         }
         else if(argc < 4){ //argc = 3.
             prt = std::stoi(argv[1]);
@@ -135,7 +134,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         }
         else{ //3 < argc.
             std::cerr << "Too many arguments specified.\n" << std::endl;
-            return 1;
+            return close_main(-1);
         }
 
         t_clients_list clients(static_cast<size_t>(clients_limit));
@@ -173,7 +172,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         //
         //protocol: 0 = Default Protocol: Because you requested a stream socket over IPv4, the OS defaults to TCP (IPPROTO_TCP).
 
-        timer1.reset_timer(); //1
+        /////////timer1.reset_timer(); //1
         
         //modified socket behavior to allow immediate reuse of the port(Gemini's implementation...):
         //-------
@@ -182,7 +181,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         //-------
         //-----
 
-        timer1.reset_timer(); //2
+        /////////timer1.reset_timer(); //2
 
         //2: (configuring the address):
         //-----
@@ -207,7 +206,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         //(from the CPU's order[Little-Endian in most CPUs{intel/AMD}] to the Network's order[Big-Endian in most IP types{TCP/UDP}]).
         //-----
 
-        timer1.reset_timer(); //3
+        /////////timer1.reset_timer(); //3
 
         //3: (binding to the socket):
         //-----
@@ -215,7 +214,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
             //bind input structure:
             //bind(socket_descriptor, pointer_to_struct, size_of_struct)
             if(bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0){
-                throw Bind_Exception("listening-socket binding failed.", errno); 
+                throw Bind_Exception("first listening-socket binding socket operation failure in main.", errno); 
                 //types of bind failures:
                 //EADDRINUSE (Port ddress already in use): The most common error. Another process is already using port 8080.
                 //EACCES (Permission denied): You tried to bind to a "privileged" port (0–1023) without root/administrator privileges.
@@ -229,27 +228,27 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
             //the spread out socket opening explanations were worth the extra space...   
                 server_addr.sin_port = htons(prt + 1); //trying to reopen the socket on a higher port number.
                 if(bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0){
-                    throw Bind_Exception("socket binding failed.", errno); //if this part of code throws an error or fails -
-                    //in any way, it should cause the program to hault until the "Timeout" timer runs out.
+                    throw Bind_Exception("second listening-socket binding socket operation failure in main.", errno); //if this part of the code throws an - 
+                    // error or fails is should just rethrow the Bind_Exception and finally take the entire code down with an error return value(-1).
                 }
             }
         }
         //-----
 
-        timer1.reset_timer(); //4
+        /////////timer1.reset_timer(); //4
 
         //4. (listening to clients):
         //-----
         int backlog = 20;
         listen(server_fd, backlog); //backlog = limiting the in-progress connections queue size.
-        Thread_safe_logger::getInstance().log("listening on port - " + std::to_string(prt) + "...");
+        logger.log("listening on port - " + std::to_string(prt) + "...");
         //-----
 
-        timer1.reset_timer(); //5
+        /////////timer1.reset_timer(); //5
 
         //5. (accepting a connection): 
         //-----
-        std::string current_name;
+        std::string temp_name = "";
         //Acceptting and handling a client's connection:
         while(true){
             try{ // -> here we try to catch both the accept + thread, and the handle_client exceptions.
@@ -262,11 +261,11 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
                 //standard error checks:
                 if(client_fd < 0){
                     if(errno == EINTR) continue; //EINTR = a "recoverable" error signifying a simple interrupted call.
-                    throw Socket_Exception("accept socket operation in server.cpp.", errno);
+                    throw Socket_Exception("accepting socket operation failure in main.", errno);
                 }
             
                 //Creating a new thread in order to handle each client as concurrent processes:
-                std::thread(handle_client, std::ref(client_fd), std::ref(clients), std::ref(current_name), std::ref(inventory)).detach(); //(sending inventory by reference...).
+                std::thread(handle_client, std::ref(client_fd), std::ref(clients), std::ref(temp_name), std::ref(inventory)).detach(); //(sending inventory by reference...).
                 //*Note - this type of manual socket-opening technique we use here is called "Blocking-socket opening".
                 //the reason it is discouraged(compared to non-Blocking alternatives like using select()/poll()/epoll()) is because - 
                 //every operation we do on a single socket(read/write...) haults the entire thread it occupies, thus enabling only the creation of - 
@@ -276,23 +275,27 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
                 continue; 
             }
             catch (const Timeout_Exception& e){ //most likely unrecoverable:
-                return close_main(server_fd, -1);
+                throw; //rethrows Timeout_Exception.
             }
         }
     }
     catch (const Bind_Exception& e){
-        return close_main(server_fd, -1);
+        close(server_fd);
+        return close_main(-1);
     }
     catch (const Socket_Exception& e){
-        return close_main(server_fd, -1);
+        
+        close(server_fd);
+        return close_main(-1);
     }    
     catch (const Timeout_Exception& e){
-        return close_main(server_fd, -1);
+        close(server_fd);
+        return close_main(-1);
     }
     
     //6. ("healthy" closing the server socket):
     //-----
-    return close_main(server_fd, 0);
+    return close_main(0);
     //-----
 }
 //-----

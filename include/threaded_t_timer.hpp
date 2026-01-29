@@ -10,7 +10,7 @@
 #include <condition_variable>
 
 class threaded_t_timer {
-private:
+    private:
     //4 construction inputs:
     std::string process_name;
     int target_socket;
@@ -26,8 +26,8 @@ private:
     std::mutex mtx;             
     std::condition_variable cv;
     //
-    
-public:
+        
+    public:
     //constructor + destructor:
     threaded_t_timer(const std::string process_name, int socket_fd, std::chrono::seconds timeout, const int check_interval_ms);
     ~threaded_t_timer(); //ensures the thread joins/detaches safely.
