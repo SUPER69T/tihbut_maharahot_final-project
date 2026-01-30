@@ -1,21 +1,27 @@
-<build>: -<status>:    3xplain std::move in IM -(X).
+<build>: -<status>:   
 
 server main: 
 write global log function -(V). create log file next to the executable -(V).
 main *argv[] receiving parameters: -(V).
  [0] starting port number -(V) (default: 8080).
- [1] max clients -(X) (default: 10).
+ [1] max clients -(V) (default: 3).
 Timeout timer that throws Timeout_exception for each thread-(X).
-{server function names : IM functions} <unordered_map>, like python's oop implementation -(X).
 
 
 server operations:
 items -(V).
 InventoryManager -(V).
 implement new exception type for: 1.item 2.manager -(V).
-exceptions stack -(V) + read history exception-log for each client -(X).
-send error/exception messages to client -(X).
-add a queue(threaded?) to safe_print -(X).
+exceptions stack -(V)
+send error/exception messages to client -(V).
+add a queue(threaded?) to safe_print -(V).
 
 client main:
 
+
+
+
+
+depricated:
+read history exception-log for each client -(X).
+{server function names : IM functions} <unordered_map>, like python's oop implementation -(X).

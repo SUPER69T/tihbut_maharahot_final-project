@@ -118,7 +118,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
 
         //default aegv parameters:
         int prt = 8080;
-        int clients_limit = 20; //max amount of connections that can be astablished. important because we are using blocking socketing.
+        int clients_limit = 3; //max amount of connections that can be astablished. important because we are using blocking socketing.
         //
 
         if(argc < 2){ //argc = 1.

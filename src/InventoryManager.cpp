@@ -18,7 +18,7 @@ namespace Store{
         this->IM_Id = total_IMs;
     } 
     InventoryManager::InventoryManager(const std::vector<Item>& items) : items(std::move(items)){} //Item-type vector-reference receiving constructor.
-    //std::move: a move semantic
+    //std::move: a move semantic - used to pass resources more efficiently - as an rvalue, instead of copying them.
     //
 
     //Private methods:

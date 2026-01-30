@@ -10,43 +10,45 @@
 namespace Store{
 
     class InventoryManager{
+
         private:
-            //Fields:
-            std::vector<Item> items;  
-            std::mutex mtx;
-            std::condition_variable cv; 
-            std::string listItems(std::vector<Item>& items); //could have also implemented "string_view_literals".
-            static int total_IMs;
-            static int IM_Id;
-            //
+        //-----
+        //Fields:
+        std::vector<Item> items;  
+        std::mutex mtx;
+        std::condition_variable cv; 
+        std::string listItems(std::vector<Item>& items); //could have also implemented "string_view_literals".
+        static int total_IMs;
+        static int IM_Id;
 
-            //Private methods:
-            Item& findItemById(const std::string& username, const int itemId);
-            //
-
+        //Private methods:
+        Item& findItemById(const std::string& username, const int itemId);
+        //
+        //-----
+        
         public:
-            //Constructors:
-            InventoryManager(); //empty constructor.
-            InventoryManager(const std::vector<Item>& items); //Item-type vector-reference receiving constructor.
-            //
+        //-----
+        //Constructors:
+        InventoryManager(); //empty constructor.
+        InventoryManager(const std::vector<Item>& items); //Item-type vector-reference receiving constructor.
+        //
 
-            //Destructor:
-            ~InventoryManager() = default; //thought of implementing a manual destructor, but that -
-            //seems unnecessary due to the defualt cpp RAII implementations of our used objects here...
-            //
+        //Destructor:
+        ~InventoryManager() = default; //thought of implementing a manual destructor, but that -
+        //seems unnecessary due to the defualt cpp RAII implementations of our used objects here...
+        //
 
-            //Public methods:
-            std::string listItems();
-            void borrowItem(int itemId, const std::string& username);
-            void returnItem(int itemId, const std::string& username);
-            void waitUntilAvailable(int itemId, const std::string& username);
-            std::string toString() const;
+        //Public methods:
+        std::string listItems();
+        void borrowItem(int itemId, const std::string& username);
+        void returnItem(int itemId, const std::string& username);
+        void waitUntilAvailable(int itemId, const std::string& username);
+        std::string toString() const;
 
-            friend std::ostream& operator<<(std::ostream& os, const InventoryManager& IM);//:
-            //a more standard way of overloading the "<<" operator. no need for "getter" methods,
-            //grants access to all private fields and methods for convenience.
-
-            //
+        friend std::ostream& operator<<(std::ostream& os, const InventoryManager& IM);//:
+        //a more standard way of overloading the "<<" operator. no need for "getter" methods,
+        //grants access to all private fields and methods for convenience.
+        //-----
     };
 }
 

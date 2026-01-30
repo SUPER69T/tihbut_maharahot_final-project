@@ -224,7 +224,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& te
                 throw std::invalid_argument("ID not specified.");
             }
 
-            switch(cmd){
+            switch(commandMap[command]){
 
                 //---
                 //shows the list of items: 
