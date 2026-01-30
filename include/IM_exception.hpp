@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include "Thread_safe_logger.hpp"
+#include "thread_safe_logger.hpp"
 
 namespace Store{
 
@@ -23,7 +23,7 @@ namespace Store{
         explicit IM_exception(const std::string& username, const std::string& message) 
             : msg(username + ": " + message){
             history.push_back(msg);
-            Thread_safe_logger::getInstance().log(msg);
+            thread_safe_logger::getInstance().log(msg);
         }
         /*
         virtual: because "what()" method is declared as a virtual method in the base -

@@ -14,7 +14,7 @@
 #include <filesystem> //::path - used for: __FILE__ + .parent_path().
 //---
 
-#include "Thread_safe_logger.hpp"
+#include "thread_safe_logger.hpp"
 
 //gemini's help for making a hirarchy-exceptions structure:
 //this exception class is used for server-network-sided exception throwing, meaning the client does not get access to the exception-logging file.
@@ -31,7 +31,7 @@ class Network_Exception : public std::runtime_error{
         : std::runtime_error(format_message(msg, err)), //:
         error_code(err){
             log_error(); //logging the message on every Network_Exception instanciation. 
-            Thread_safe_logger::getInstance().log(this->what()); //printing the error message.
+            thread_safe_logger::getInstance().log(this->what()); //printing the error message.
         } 
         //   
 

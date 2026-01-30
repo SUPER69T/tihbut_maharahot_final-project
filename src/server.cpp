@@ -41,8 +41,8 @@
 //project specific:
 #include "Network_Exception.hpp"
 #include "handle_client.hpp"
-#include "Thread_safe_logger.hpp"
-#include "threaded_t_timer.hpp"
+#include "thread_safe_logger.hpp"
+//#include "threaded_t_timer.hpp"
 #include "t_clients_list.hpp"
 #include "handle_client.hpp"
 //-
@@ -71,13 +71,13 @@
 
 //just for fun...:
 int close_main(const int& err){ 
-    Thread_safe_logger::getInstance().log("Closing the server in:");
+    thread_safe_logger::getInstance().log("Closing the server in:");
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    Thread_safe_logger::getInstance().log("3...");
+    thread_safe_logger::getInstance().log("3...");
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    Thread_safe_logger::getInstance().log("2...");
+    thread_safe_logger::getInstance().log("2...");
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    Thread_safe_logger::getInstance().log("1...\ngoodbye! <O_O>");
+    thread_safe_logger::getInstance().log("1...\ngoodbye! <O_O>");
     std::this_thread::sleep_for(std::chrono::seconds(1));
     return err;
 }
@@ -105,7 +105,7 @@ bool is_timeout_reached(threaded_t_timer timer){
 //argc: argument count, argv: argument vector.
 int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]].
 
-    Thread_safe_logger& logger = Thread_safe_logger::getInstance(); //initialization of the one and only -
+    thread_safe_logger& logger = thread_safe_logger::getInstance(); //initialization of the one and only -
     //singleton - Thread_safe_logger-object instance for the entire program's life-time.
 
     int server_fd;
