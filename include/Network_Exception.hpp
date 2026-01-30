@@ -12,6 +12,8 @@
 #include <iostream>
 #include <fstream> //::ofstream = used to read and write into files.
 #include <filesystem> //::path - used for: __FILE__ + .parent_path().
+#include <chrono>
+#include <iomanip> //::put_time = used to reformat time_t.
 //---
 
 #include "thread_safe_logger.hpp"
@@ -63,7 +65,10 @@ class Network_Exception : public std::runtime_error{
             std::ofstream log_file(source_dir / "server_errors.log", std::ios::app); //"server_errors.log" = the name of the logging file.
             //app = append modifier for the stream to write to the end of the file, regardless of the file's pointer position.
             if (log_file.is_open()) {
-                log_file << "[LOG]: " << what() << "\n"; 
+                auto now = std::chrono::system_clock::now();
+                std::time_t currentTime = std::chrono::system_clock::to_time_t(now); //converting the time to std::time_t.
+                std::tm* localTime = std::localtime(&currentTime); //this localtime version is not thread-safe.
+                log_file << "[LOG]: " << "<" << std::put_time(localTime, "%H:%M:%S") << "> " << what() << "\n"; 
             } else {
                 std::cerr << "Critical: Could not open log file!"; //cerr does not require explicit flushing because it is unbuffered...
             }

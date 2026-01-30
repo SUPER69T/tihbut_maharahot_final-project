@@ -39,7 +39,7 @@ namespace Store{
         //both lock_guard and unique_lock unlock the mutex on scope exit(RAII mechanism).
         std::string result = "Item ID:    Name:    Available:    Borrowed by:    "; //going to require dynamic space tweaking.
         for(const auto& item : items){
-            result += item.toString() + "\n";
+            result += item.toString();
         }
         return result;
     }

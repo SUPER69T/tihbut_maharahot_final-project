@@ -117,13 +117,16 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         //
 
         //default aegv parameters:
-        int prt = 8080;
+        int prt = 5555; //could also use - 8080.
         int clients_limit = 3; //max amount of connections that can be astablished. important because we are using blocking socketing.
         //
 
-        if(argc < 2){ //argc = 1.
+        if(argc < 1){ //argc = 1.
             std::cerr << "\n" << std::endl;
             return close_main(-1);
+        }
+        else if(argc < 2){ //argc = 1.
+            //both default arguments are applied.
         }
         else if(argc < 3){ //argc = 2.
             std::cerr << "Specify: port, maxclients.\n" << std::endl;

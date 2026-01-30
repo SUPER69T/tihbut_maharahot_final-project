@@ -19,7 +19,7 @@ namespace Store{
         std::condition_variable cv; 
         std::string listItems(std::vector<Item>& items); //could have also implemented "string_view_literals".
         static int total_IMs;
-        static int IM_Id;
+        int IM_Id = 0;
 
         //Private methods:
         Item& findItemById(const std::string& username, const int itemId);
