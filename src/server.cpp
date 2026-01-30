@@ -44,6 +44,7 @@
 #include "Thread_safe_logger.hpp"
 #include "threaded_t_timer.hpp"
 #include "t_clients_list.hpp"
+#include "handle_client.hpp"
 //-
 //don't know why "Store" namespace refuses to be included, instead we're forced into including these two bastards that hate co-operating: 
 #include "Item.hpp"
@@ -163,7 +164,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         
         //1: (socket assigning):
         //-----
-        int server_fd = socket(AF_INET, SOCK_STREAM, 0); //server-File-Descriptor(on linux OS).
+        server_fd = socket(AF_INET, SOCK_STREAM, 0); //server-File-Descriptor(on linux OS).
         //domain: AF_INET(AF = address family) = Internet Domain (AF_INET): The standard for network sockets, 
         //using IP addresses and port numbers to communicate across different machines over protocols like TCP/IP(IPv4 in our case).
         //
@@ -253,7 +254,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         while(true){
             try{ // -> here we try to catch both the accept + thread, and the handle_client exceptions.
                 //Accepting a new client's connection:
-                int client_fd = accept(server_fd, nullptr, nullptr); //each new socket connection established removes that - 
+                const int client_fd = accept(server_fd, nullptr, nullptr); //each new socket connection established removes that - 
                 //"in-progress" object from the "backlog" queue initialized inside the "listen" operation, allowing new in-progress connections to enter that queue. 
                 //int client_fd =
                 //addr = A pointer to a sockaddr structure.             }both addr and addr_len are set to nullptr because they don't yet know the actual values -
@@ -261,9 +262,17 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
                 //standard error checks:
                 if(client_fd < 0){
                     if(errno == EINTR) continue; //EINTR = a "recoverable" error signifying a simple interrupted call.
-                    throw Socket_Exception("accepting socket operation failure in main.", errno);
+                    throw Socket_Exception("accepting socket operation failure in main.", errno); //done to document in the logger.
                 }
-            
+                else{ //a 3-way handshake has been established: 
+                    temp_name = clients.add_client(client_fd);
+                    if(temp_name == ""){ //means that the clients list is full...
+                        send_all(client_fd, "ERR PROTOCOL server is full.\n", "main");
+                        throw Socket_Exception("server is full message in main for: client_fd=" + std::to_string(client_fd) + ".", errno);
+                        close(client_fd);
+                        continue;  
+                    } 
+                }
                 //Creating a new thread in order to handle each client as concurrent processes:
                 std::thread(handle_client, std::ref(client_fd), std::ref(clients), std::ref(temp_name), std::ref(inventory)).detach(); //(sending inventory by reference...).
                 //*Note - this type of manual socket-opening technique we use here is called "Blocking-socket opening".
@@ -284,7 +293,6 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         return close_main(-1);
     }
     catch (const Socket_Exception& e){
-        
         close(server_fd);
         return close_main(-1);
     }    
