@@ -37,7 +37,7 @@ namespace Store{
     std::string InventoryManager::listItems(){
         std::lock_guard<std::mutex> lock(mtx); //order precautionary measure.
         //both lock_guard and unique_lock unlock the mutex on scope exit(RAII mechanism).
-        std::string result = "Item ID:    Name:    Available:    Borrowed by:    "; //going to require dynamic space tweaking.
+        std::string result = "Item ID:    Name:    Available:    Borrowed by:    \n"; //going to require dynamic space tweaking.
         for(const auto& item : items){
             result += item.toString();
         }

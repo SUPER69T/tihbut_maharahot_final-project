@@ -144,7 +144,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& te
                 arg = ""; //resetting arg.
             } 
             itemID = -1; //reseting default itemID to -1.
-            
+
             if(!is_authenticated){ //in case the name-authentication hasn't occurred yet:
                 if(command != "HELLO"){ //in case the client hasn't commanded "HELLO" now:
                     throw std::invalid_argument("ERR PROTOCOL you have to authenticate yourself first.");
@@ -191,7 +191,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& te
                 }  
             }
             //just for fun:
-            if(command == "HELLO" and is_authenticated){
+            else if(command == "HELLO" and is_authenticated){
                 throw std::invalid_argument("you know you don't have to keep authenticating...right?");
             }
             //

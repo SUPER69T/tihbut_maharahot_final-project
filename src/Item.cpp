@@ -48,7 +48,7 @@ namespace Store{
         borrowedBy = "";
     }
     std::string Item::toString() const{
-        return std::to_string(id) + "       " + name + "       " + (isBorrowed ? "No" : "Yes") + "       " +  (isBorrowed ? borrowedBy : "") + "\n";
+        return std::to_string(id) + "       " + name + "       " + (isBorrowed ? "No" : "Yes") + "       " +  (isBorrowed ? borrowedBy : "Null") + "\n";
     }  //std::to_string(id) + " " + name + " " + (isBorrowed ? "BORROWED by= "+borrowedBy : "FREE");
 
     std::ostream& operator<<(std::ostream& os, const Item& item) {
