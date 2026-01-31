@@ -1,4 +1,4 @@
-<build>: -<status>:   
+<Objective> -(status):   
 
 server main: 
 write global log function -(V). create log file next to the executable -(V).
@@ -15,6 +15,7 @@ implement new exception type for: 1.item 2.manager -(V).
 exceptions stack -(V)
 send error/exception messages to client -(V).
 add a queue(threaded?) to safe_print -(V).
+{server function names : IM functions} <unordered_map>, like python's oop implementation -(V).
 
 client main:
 
@@ -24,4 +25,3 @@ client main:
 
 depricated:
 read history exception-log for each client -(X).
-{server function names : IM functions} <unordered_map>, like python's oop implementation -(X).

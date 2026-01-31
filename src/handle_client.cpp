@@ -128,11 +128,11 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& te
     //process client-commands:         
     while(true){ //handle_client's terminal-like - loop:
         try{
-            send_all(client_fd, "\033[2J\033[1;1H\n", confirmed_name); //triggering the 'cls' command on the client's screen.
-
             if(!recv_line(client_fd, line, 4096)){ //a check that closes the socket if the client disconnected or on other various 'recv' errors. 
                 throw Socket_Exception("ERR PROTOCOL " + confirmed_name + " disconnected from server.", errno);
             } 
+            send_all(client_fd, "\033[2J\033[1;1H\n", confirmed_name); //triggering the 'cls' command on the client's screen.
+
             size_t space_pos = line.find(' '); //finds 'space' and splits into: command and argument.
 
             if(space_pos != std::string::npos){ //if there is a space we take the first half to be the commend and the second half to be the argument.
@@ -144,6 +144,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& te
                 arg = ""; //resetting arg.
             } 
             itemID = -1; //reseting default itemID to -1.
+            
             if(!is_authenticated){ //in case the name-authentication hasn't occurred yet:
                 if(command != "HELLO"){ //in case the client hasn't commanded "HELLO" now:
                     throw std::invalid_argument("ERR PROTOCOL you have to authenticate yourself first.");
