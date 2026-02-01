@@ -24,6 +24,7 @@ void close_client_thread(const int client_fd, const std::string confirmed_name){
     send_all(client_fd, "goodbye! <O_O>\n", confirmed_name);
     std::this_thread::sleep_for(std::chrono::seconds(2));
     send_all(client_fd, "QUIT\n", confirmed_name);
+    //close(client_fd); //normal fd closing.
     return;
 }
 
@@ -152,7 +153,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& te
                 throw Socket_Exception("ERR PROTOCOL " + confirmed_name + " disconnected from server.", errno);
             } 
             send_all(client_fd, "\033[2J\033[1;1H\n", confirmed_name); //triggering the 'cls' command on the client's screen.
-            send_all(client_fd, "SYNOPSIS:\nHANDSHAKE: 'HELLO' + <USERNAME>\n\n", confirmed_name);
+            send_all(client_fd, "<SYNOPSIS>: HANDSHAKE: 'HELLO' + <username>, COMMANDS: <command> + <optional_parameter>\n", confirmed_name);
 
             size_t space_pos = line.find(' '); //finds 'space' and splits into: command and argument.
 
@@ -209,6 +210,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& te
                         is_authenticated = true; //the user is valid.
                         confirmed_name = arg;
                         send_all(client_fd, "OK HELLO, " + confirmed_name +"!\n", confirmed_name);
+                        continue;
                         //
                         //authentication completed.
                     }
@@ -328,9 +330,9 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& te
 
     //healthy closing the connection:
     if(clients.remove_client(client_fd)){ //removing the client from the threaded-clients list.
-        close(client_fd); //normal fd closing.
         close_client_thread(client_fd, confirmed_name); //normal thread exit.
     }
+    
     else{
         //killing the whole program as a safety measure(file corruption with the clients list...):
         send_all(client_fd, "[CRITICAL SYSTEM ERROR] shutting down in 5 seconds...\n", confirmed_name);
