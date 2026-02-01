@@ -67,11 +67,11 @@ void send_all(int fd, const std::string& msg, const std::string& confirmed_name)
             if(errno == EAGAIN || errno == EWOULDBLOCK){ //errno = 11: EAGAIN(in linux), errno: 35 = EAGAIN(in macOS/BSD).
                 continue;
             }
-            throw Socket_Exception("ERR PROTOCOL" + confirmed_name + " had trouble in sending the message.", errno);
+            throw Socket_Exception("ERR PROTOCOL - " + confirmed_name + " had trouble in sending the message.", errno);
         }
         ///*
         else if(n == 0){ //0 bytes have been transferred, which isn't usual socket behavior...
-            throw Socket_Exception("ERR PROTOCOL" + confirmed_name +" sent 0 bytes unexpectedly.", errno);
+            throw Socket_Exception("ERR PROTOCOL - " + confirmed_name +" sent 0 bytes unexpectedly.", errno);
         }
         //*/
         sent += n; //continuing the iteration - there are more bytes to be transferred. 
@@ -243,6 +243,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& te
             if(it == commandMap.end()){ //iterator ran over the entire map and didn't find "command" as a key.
                 rand_int = (rand() % 3); //a random value between - 0, and - 2.
                 send_all(client_fd, defaultMessages.at(rand_int), confirmed_name);
+                continue;
             }
             //---
 

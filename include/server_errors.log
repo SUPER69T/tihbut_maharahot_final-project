@@ -1,3 +1,4 @@
 [LOG]: <21:06:11> Bad file descriptor: Socket Error: ERR PROTOCOLajegkajbegk had trouble in sending the message.
 [LOG]: <21:09:25> Bad file descriptor: Socket Error: ERR PROTOCOLLeon had trouble in sending the message.
 [LOG]: <21:14:13> Connection reset by peer: Socket Error: ERR PROTOCOLLeon had trouble in sending the message.
+[LOG]: <21:25:57> Connection reset by peer: Socket Error: ERR PROTOCOLLEON had trouble in sending the message.
