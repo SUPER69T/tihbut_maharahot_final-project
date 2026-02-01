@@ -22,6 +22,7 @@ class t_clients_list{
 
         //public methods:
         //-----
+        bool contains(const std::string client_name);
         //---
         //initializes a client with client_fd:
         std::string add_client(const int client_fd);

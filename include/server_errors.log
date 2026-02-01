@@ -6,3 +6,6 @@
 [LOG]: <22:22:55> Broken pipe: Socket Error: ERR PROTOCOL - client - 0 had trouble in sending the message.
 [LOG]: <22:24:03> Success: Socket Error: server is full message in main for: client_fd=5.
 [LOG]: <22:26:29> Success: Socket Error: server is full message in main for: client_fd=5.
+[LOG]: <22:31:41> Success: Socket Error: ERR PROTOCOL Leon disconnected from server.
+[LOG]: <22:31:41> Broken pipe: Socket Error: ERR PROTOCOL - Leon had trouble in sending the message.
+[LOG]: <22:35:54> Success: Socket Error: server is full message in main for: client_fd=5.

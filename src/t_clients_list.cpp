@@ -24,6 +24,13 @@ t_clients_list::t_clients_list(std::vector<std::pair<int, std::string>> vec, con
 //public methods:
 //-----
 //---
+bool t_clients_list::contains(const std::string client_name){
+    for(auto& p : this->clients_list){
+        if(p.second == client_name) return true;
+    }
+    return false;
+}
+
 std::string t_clients_list::add_client(const int client_fd){
     std::lock_guard<std::mutex> lock(mtx); 
     std::string default_name = "";
@@ -40,7 +47,7 @@ std::string t_clients_list::add_client(const int client_fd){
 bool t_clients_list::add_client(const int client_fd, const std::string client_name){
     std::lock_guard<std::mutex> lock(mtx); 
     bool added = false;
-    for(auto& p : this->clients_list){ //updating pre-existing names.
+    for(auto& p : this->clients_list){ //updating pre-existing names to a new name.
         if(p.first == client_fd){
             p.second = client_name;
             added = true;

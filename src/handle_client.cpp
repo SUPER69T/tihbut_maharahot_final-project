@@ -16,12 +16,14 @@
 void close_client_thread(const int client_fd, const std::string confirmed_name){ 
     send_all(client_fd, "Closing the connection in:\n", confirmed_name);
     send_all(client_fd, "3...\n", confirmed_name);
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
     send_all(client_fd, "2...\n", confirmed_name);
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
     send_all(client_fd, "1...\n", confirmed_name);
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
     send_all(client_fd, "goodbye! <O_O>\n", confirmed_name);
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
     close(client_fd); //normal fd closing.
     return;
 }
@@ -148,14 +150,16 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
     //process client-commands:         
     while(true){ //handle_client's terminal-like - loop:
         try{
+            send_all(client_fd, "\033[2J\033[1;1H\n", confirmed_name); //triggering the 'cls' command on the client's screen.
+            
             if(!recv_line(client_fd, line, 4096)){ //a check that closes the socket if the client disconnected or on other various 'recv' errors. 
                 throw Socket_Exception("ERR PROTOCOL " + confirmed_name + " disconnected from server.", errno);
             } 
-            send_all(client_fd, "\033[2J\033[1;1H\n", confirmed_name); //triggering the 'cls' command on the client's screen.
-            if(synopsis){
+            else if(synopsis){
                 send_all(client_fd, "<SYNOPSIS>: HANDSHAKE: 'HELLO' + <username>, COMMANDS: <command> + <optional_parameter>.\n", confirmed_name);
                 synopsis = false;
             }
+
             size_t space_pos = line.find(' '); //finds 'space' and splits into: command and argument.
 
             if(space_pos != std::string::npos){ //if there is a space we take the first half to be the commend and the second half to be the argument.
@@ -193,8 +197,11 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
                     //if the username is valid:
                     if(check_username){
                         try{
+                            if(clients.contains(arg)){
+                                throw Socket_Exception("The name - " + arg + "exists already.", errno);
+                            } 
                             if(!clients.add_client(client_fd, arg)){ //a one-time updating of the client_name in the threaded clients-list.
-                                throw Socket_Exception("[CRITICAL SYSTEM ERROR] " + confirmed_name + "'s name got corrupted.", errno);
+                                throw Socket_Exception("Names-listen threshold reached.", errno);
                             } 
                         }
                         catch(const Socket_Exception& e){ //a hard-stop program-shutdown in the case of name-corruption.
@@ -202,8 +209,9 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
                             //note on the send_all design: this is an ugly alternative to try-catching every single send_all function call, but - 
                             //that would also be ugly...cpp doesn't make exception handling/throwing/rethrowing easy so even an ugly solution can be viable. 
                             send_all(client_fd, "shutting down in 5 seconds...\n", confirmed_name);
-                            std::this_thread::sleep_for(std::chrono::seconds(5));
-                            send_all(client_fd, "QUIT\n", confirmed_name);
+                            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                            std::this_thread::sleep_for(std::chrono::seconds(4));
                             exit(1);
                         }
                         //in case all went well with appending to the clients list:
@@ -244,7 +252,8 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
             if(it == commandMap.end()){ //iterator ran over the entire map and didn't find "command" as a key.
                 rand_int = (rand() % 3); //a random value between - 0, and - 2.
                 send_all(client_fd, defaultMessages.at(rand_int), confirmed_name);
-                std::this_thread::sleep_for(std::chrono::seconds(1));
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 continue;
             }
             //---
@@ -335,12 +344,12 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
     if(clients.remove_client(client_fd)){ //removing the client from the threaded-clients list.
         close_client_thread(client_fd, confirmed_name); //normal thread exit.
     }
-    
     else{
         //killing the whole program as a safety measure(file corruption with the clients list...):
         send_all(client_fd, "[CRITICAL SYSTEM ERROR] shutting down in 5 seconds...\n", confirmed_name);
-        std::this_thread::sleep_for(std::chrono::seconds(5));
-        send_all(client_fd, "QUIT\n", confirmed_name);
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        std::this_thread::sleep_for(std::chrono::seconds(4));
         exit(1);
     }
 }
