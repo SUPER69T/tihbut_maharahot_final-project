@@ -108,15 +108,21 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& te
     bool is_authenticated = false; //checking whether the user sent an entry - "Hello" message. 
 
     //variable initializations for the while loop:
+    //-----
+    //primitive types:
     //---
+    //note: just learned that primitive-types initializations inside of loops aren't as bad of an idea as I thought they were, and for several - 
+    //reasons like: (1.) scoped name declaration - extra name safety., (2.) compiler optimization - space on the stack is only allocated once. 
     bool check_username = true; //to authenticating the username.
+    int itemID;
+    int rand_int;
+    bool exit_flag = false;
+    //---
+    
     std::string confirmed_name = temp_name; //unconfirmed yet...
     std::string line;
     std::string command;
     std::string arg; //used for general-purpose input checking and de-muxing logic.
-    int itemID;
-    int rand_int;
-    bool exit_flag = false;
 
     //a cute alternative to switch-case:
     enum class Command {LIST, BORROW, RETURN, WAIT, QUIT};
@@ -135,7 +141,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& te
 "UNKNOWN COMMAND. TRY FOLLOWING INSTRUCTION, MAYBE.\n",
 "HUH? THAT'S NOT AN OPTION, TRY AGAIN!\n"
     };
-    //---
+    //-----
 
     //process client-commands:         
     while(true){ //handle_client's terminal-like - loop:
