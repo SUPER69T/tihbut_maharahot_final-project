@@ -15,7 +15,6 @@
 //just for fun...:
 void close_client_thread(const int client_fd, const std::string confirmed_name){ 
     send_all(client_fd, "Closing the connection in:\n", confirmed_name);
-    std::this_thread::sleep_for(std::chrono::seconds(1));
     send_all(client_fd, "3...\n", confirmed_name);
     std::this_thread::sleep_for(std::chrono::seconds(1));
     send_all(client_fd, "2...\n", confirmed_name);
@@ -119,6 +118,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
     int itemID;
     int rand_int;
     bool exit_flag = false;
+    bool synopsis = true;
     //---
 
     std::string confirmed_name = temp_name; //unconfirmed yet...
@@ -152,8 +152,10 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
                 throw Socket_Exception("ERR PROTOCOL " + confirmed_name + " disconnected from server.", errno);
             } 
             send_all(client_fd, "\033[2J\033[1;1H\n", confirmed_name); //triggering the 'cls' command on the client's screen.
-            send_all(client_fd, "<SYNOPSIS>: HANDSHAKE: 'HELLO' + <username>, COMMANDS: <command> + <optional_parameter>.\n", confirmed_name);
-
+            if(synopsis){
+                send_all(client_fd, "<SYNOPSIS>: HANDSHAKE: 'HELLO' + <username>, COMMANDS: <command> + <optional_parameter>.\n", confirmed_name);
+                synopsis = false;
+            }
             size_t space_pos = line.find(' '); //finds 'space' and splits into: command and argument.
 
             if(space_pos != std::string::npos){ //if there is a space we take the first half to be the commend and the second half to be the argument.
