@@ -22,6 +22,8 @@ void close_client_thread(const int client_fd, const std::string confirmed_name){
     std::this_thread::sleep_for(std::chrono::seconds(1));
     send_all(client_fd, "1...\n", confirmed_name);
     send_all(client_fd, "goodbye! <O_O>\n", confirmed_name);
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    send_all(client_fd, "QUIT\n", confirmed_name);
     return;
 }
 
@@ -118,7 +120,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& te
     int rand_int;
     bool exit_flag = false;
     //---
-    
+
     std::string confirmed_name = temp_name; //unconfirmed yet...
     std::string line;
     std::string command;
@@ -150,6 +152,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& te
                 throw Socket_Exception("ERR PROTOCOL " + confirmed_name + " disconnected from server.", errno);
             } 
             send_all(client_fd, "\033[2J\033[1;1H\n", confirmed_name); //triggering the 'cls' command on the client's screen.
+            send_all(client_fd, "SYNOPSIS:\nHANDSHAKE: 'HELLO' + <USERNAME>\n\n", confirmed_name);
 
             size_t space_pos = line.find(' '); //finds 'space' and splits into: command and argument.
 
@@ -198,6 +201,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& te
                             //that would also be ugly...cpp doesn't make exception handling/throwing/rethrowing easy so even an ugly solution can be viable. 
                             send_all(client_fd, "shutting down in 5 seconds...\n", confirmed_name);
                             std::this_thread::sleep_for(std::chrono::seconds(5));
+                            send_all(client_fd, "QUIT\n", confirmed_name);
                             exit(1);
                         }
                         //in case all went well with appending to the clients list:
@@ -292,7 +296,6 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& te
                 //---
                 //stops the connection between the server and the client:
                 case Command::QUIT:{
-                    send_all(client_fd, "OK QUIT\n", confirmed_name);
                     exit_flag = true;
                     break;
                 }
@@ -332,6 +335,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& te
         //killing the whole program as a safety measure(file corruption with the clients list...):
         send_all(client_fd, "[CRITICAL SYSTEM ERROR] shutting down in 5 seconds...\n", confirmed_name);
         std::this_thread::sleep_for(std::chrono::seconds(5));
+        send_all(client_fd, "QUIT\n", confirmed_name);
         exit(1);
     }
 }

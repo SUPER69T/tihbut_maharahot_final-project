@@ -37,7 +37,7 @@ namespace Store{
     std::string InventoryManager::listItems(){
         std::lock_guard<std::mutex> lock(mtx); //order precautionary measure.
         //both lock_guard and unique_lock unlock the mutex on scope exit(RAII mechanism).
-        std::string result = "Item ID:    Name:    Available:    Borrowed by:    \n"; //going to require dynamic space tweaking.
+        std::string result = "Item ID:    Name:    Available:      Borrowed by:    \n"; //going to require dynamic space tweaking.
         for(const auto& item : items){
             result += item.toString();
         }
@@ -47,7 +47,7 @@ namespace Store{
     void InventoryManager::borrowItem(const int itemId, const std::string& username){
         std::lock_guard<std::mutex> lock(mtx); 
         Item& founditem = findItemById(username, itemId);
-        if(founditem.isAvailable()) founditem.borrow(username); //throws Item_exception.
+        founditem.borrow(username); //throws Item_exception.
     }
 
     void InventoryManager::returnItem(const int itemId, const std::string& username){
@@ -78,7 +78,10 @@ namespace Store{
         //
         //the reason the lambda accepts a reference as a return is because the - 
         //isAvailable() method is a read-only method(const signature).
-        itemPtr->borrow(username); //throws Item_exception.
+
+        /////could have just auto-borrowed this instead...
+        //itemPtr->borrow(username); //throws Item_exception.
+        /////
     }
     //
 

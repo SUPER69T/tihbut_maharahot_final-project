@@ -28,7 +28,7 @@ namespace Store{
             throw Item_exception(username, name, " is not available.");
         }
 
-        else if(typeid(username) != typeid(std::string) or typeid(username) != typeid(char)){ //guessing the request was to simply check username type compatibility...?
+        else if(typeid(username) != typeid(std::string) && typeid(username) != typeid(char) && typeid(username) != typeid(const char*)){ //also checks for string literal...
             throw Item_exception(username, name, " is an Invalid username.");
         }
 
@@ -48,8 +48,8 @@ namespace Store{
         borrowedBy = "";
     }
     std::string Item::toString() const{
-        return std::to_string(id) + "       " + name + "       " + (isBorrowed ? "No" : "Yes") + "       " +  (isBorrowed ? borrowedBy : "Null") + "\n";
-    }  //std::to_string(id) + " " + name + " " + (isBorrowed ? "BORROWED by= "+borrowedBy : "FREE");
+        return std::to_string(id) + "           " + name + "         " + (isBorrowed ? "No" : "Yes") + "       " +  (isBorrowed ? borrowedBy : "Free") + "\n";
+    } 
 
     std::ostream& operator<<(std::ostream& os, const Item& item) {
         os << item.toString(); //Reusing our previous toString method like python's: __str__/__repr__ differences.
