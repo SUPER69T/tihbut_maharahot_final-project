@@ -9,3 +9,5 @@
 [LOG]: <22:31:41> Success: Socket Error: ERR PROTOCOL Leon disconnected from server.
 [LOG]: <22:31:41> Broken pipe: Socket Error: ERR PROTOCOL - Leon had trouble in sending the message.
 [LOG]: <22:35:54> Success: Socket Error: server is full message in main for: client_fd=5.
+[LOG]: <23:06:53> Success: Socket Error: server is full message in main for: client_fd=6.
+[LOG]: <23:07:08> Success: Socket Error: The name - ONEexists already.

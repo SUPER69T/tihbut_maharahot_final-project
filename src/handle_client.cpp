@@ -198,7 +198,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
                     if(check_username){
                         try{
                             if(clients.contains(arg)){
-                                throw Socket_Exception("The name - " + arg + "exists already.", errno);
+                                throw Socket_Exception("The name - " + arg + " exists already.", errno);
                             } 
                             if(!clients.add_client(client_fd, arg)){ //a one-time updating of the client_name in the threaded clients-list.
                                 throw Socket_Exception("Names-listen threshold reached.", errno);
@@ -208,11 +208,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
                             send_all(client_fd, e.what() + std::string("\n"), confirmed_name); //:
                             //note on the send_all design: this is an ugly alternative to try-catching every single send_all function call, but - 
                             //that would also be ugly...cpp doesn't make exception handling/throwing/rethrowing easy so even an ugly solution can be viable. 
-                            send_all(client_fd, "shutting down in 5 seconds...\n", confirmed_name);
-                            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-                            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-                            std::this_thread::sleep_for(std::chrono::seconds(4));
-                            exit(1);
+                            close_client_thread(client_fd, confirmed_name);
                         }
                         //in case all went well with appending to the clients list:
                         //
