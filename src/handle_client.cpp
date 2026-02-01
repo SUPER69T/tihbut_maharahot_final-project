@@ -14,6 +14,7 @@
 
 //just for fun...:
 void close_client_thread(const int client_fd, const std::string confirmed_name){ 
+    try{
     send_all(client_fd, "Closing the connection in:\n", confirmed_name);
     send_all(client_fd, "3...\n", confirmed_name);
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -24,8 +25,10 @@ void close_client_thread(const int client_fd, const std::string confirmed_name){
     send_all(client_fd, "goodbye! <O_O>\n", confirmed_name);
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+    catch(...){} //(...) = specifies that the catch block catches all the types errors.
     close(client_fd); //normal fd closing.
-    return;
+    return; //extra safety.
 }
 
 //a safe sending of an entire string:
@@ -121,6 +124,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
     int rand_int;
     bool exit_flag = false;
     bool synopsis = true;
+    bool shutdown_signal = false;
     //---
 
     std::string confirmed_name = temp_name; //unconfirmed yet...
@@ -198,17 +202,18 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
                     if(check_username){
                         try{
                             if(clients.contains(arg)){
-                                throw Socket_Exception("The name - " + arg + " exists already.", errno);
+                                throw Socket_Exception("The name - " + arg + " exists already.", 0);
                             } 
                             if(!clients.add_client(client_fd, arg)){ //a one-time updating of the client_name in the threaded clients-list.
-                                throw Socket_Exception("Names-listen threshold reached.", errno);
+                                throw Socket_Exception("Names-listen threshold reached.", 0);
                             } 
                         }
-                        catch(const Socket_Exception& e){ //a hard-stop program-shutdown in the case of name-corruption.
-                            send_all(client_fd, e.what() + std::string("\n"), confirmed_name); //:
+                        catch(const Socket_Exception& e){ //a hard-stop socket-shutdown in the case of name-corruption.
+                            send_all(client_fd, e.what() + std::string("\n"), confirmed_name);//:
                             //note on the send_all design: this is an ugly alternative to try-catching every single send_all function call, but - 
                             //that would also be ugly...cpp doesn't make exception handling/throwing/rethrowing easy so even an ugly solution can be viable. 
                             close_client_thread(client_fd, confirmed_name);
+                            return;
                         }
                         //in case all went well with appending to the clients list:
                         //
@@ -322,6 +327,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
             continue;
         }
         catch(const Socket_Exception& e){ //acts as a socket-closer in cases of socket-exceptions.
+            shutdown_signal = true;
             break;
         }
         catch(const Timeout_Exception& e){ //acts as a socket-closer in cases of timeout-exceptions.
@@ -336,16 +342,14 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
         if(exit_flag == true) break;
     } 
 
+    bool removed_safely = clients.remove_client(client_fd);
     //healthy closing the connection:
-    if(clients.remove_client(client_fd)){ //removing the client from the threaded-clients list.
+    if(!shutdown_signal && removed_safely){ //removing the client from the threaded-clients list.
         close_client_thread(client_fd, confirmed_name); //normal thread exit.
     }
     else{
-        //killing the whole program as a safety measure(file corruption with the clients list...):
-        send_all(client_fd, "[CRITICAL SYSTEM ERROR] shutting down in 5 seconds...\n", confirmed_name);
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        std::this_thread::sleep_for(std::chrono::seconds(4));
-        exit(1);
+        //killing the whole program as a safety measure(file corruption with the clients list...): 
+        close(client_fd);
+        //exit(1); no need to kill the entire program...
     }
 }

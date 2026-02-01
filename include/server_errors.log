@@ -11,3 +11,13 @@
 [LOG]: <22:35:54> Success: Socket Error: server is full message in main for: client_fd=5.
 [LOG]: <23:06:53> Success: Socket Error: server is full message in main for: client_fd=6.
 [LOG]: <23:07:08> Success: Socket Error: The name - ONEexists already.
+[LOG]: <23:09:59> Success: Socket Error: The name - LEON exists already.
+[LOG]: <23:10:01> Bad file descriptor: Socket Error: ERR PROTOCOL - LEON had trouble in sending the message.
+[LOG]: <23:10:01> Bad file descriptor: Socket Error: ERR PROTOCOL - LEON had trouble in sending the message.
+[LOG]: <23:12:37> Success: Socket Error: The name - LEON exists already.
+[LOG]: <23:12:39> Bad file descriptor: Socket Error: ERR PROTOCOL - LEON had trouble in sending the message.
+[LOG]: <23:12:39> Bad file descriptor: Socket Error: ERR PROTOCOL - LEON had trouble in sending the message.
+[LOG]: <23:30:29> Success: Socket Error: The name - LEON exists already.
+[LOG]: <23:30:31> Bad file descriptor: Socket Error: ERR PROTOCOL - LEON had trouble in sending the message.
+[LOG]: <23:30:31> Bad file descriptor: Socket Error: ERR PROTOCOL - LEON had trouble in sending the message.
+[LOG]: <23:46:48> Success: Socket Error: The name - LEON exists already.

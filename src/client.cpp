@@ -74,7 +74,7 @@ void client_thread(std::string server_ip, int port)
     // std::string reply;
     // if (recv_line(fd, reply)) {
     //     std::cout << reply << std::endl;
-    // } DOESNT WORK
+    // } DOESNT WORK !!
 
     while (true)
     {
