@@ -8,6 +8,9 @@
 #include "InventoryManager.hpp"
 #include <t_clients_list.hpp>
 
+//just for fun...:
+void close_client_thread(const int client_fd, const std::string confirmed_name);
+
 //sending an entire message:
 void send_all(const int fd, const std::string& msg, const std::string& confirmed_name);
 

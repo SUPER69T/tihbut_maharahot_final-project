@@ -7,11 +7,23 @@
 #include <cstdlib>
 #include "handle_client.hpp"
 #include "InventoryManager.hpp"
-#include "Network_Exception.hpp"
+#include "Network_Exception.hpp"                
 #include "Item_exception.hpp"
 #include "IM_exception.hpp"
-#include "t_clients_list.hpp"
+#include "t_clients_list.hpp"       
 
+//just for fun...:
+void close_client_thread(const int client_fd, const std::string confirmed_name){ 
+    send_all(client_fd, "Closing the connection in:\n", confirmed_name);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    send_all(client_fd, "3...\n", confirmed_name);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    send_all(client_fd, "2...\n", confirmed_name);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    send_all(client_fd, "1...\n", confirmed_name);
+    send_all(client_fd, "goodbye! <O_O>\n", confirmed_name);
+    return;
+}
 
 //a safe sending of an entire string:
 void send_all(int fd, const std::string& msg, const std::string& confirmed_name){
@@ -107,21 +119,21 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& te
     bool exit_flag = false;
 
     //a cute alternative to switch-case:
-        enum class Command {LIST, BORROW, RETURN, WAIT, QUIT};
+    enum class Command {LIST, BORROW, RETURN, WAIT, QUIT};
 
-        //a python-style helper map:
-        std::map<std::string, Command> commandMap = {
-            {"LIST", Command::LIST},
-            {"BORROW", Command::BORROW},
-            {"RETURN", Command::RETURN},
-            {"WAIT", Command::WAIT},
-            {"QUIT", Command::QUIT}
-        };
+    //a python-style helper map:
+    std::map<std::string, Command> commandMap = {
+        {"LIST", Command::LIST},
+        {"BORROW", Command::BORROW},
+        {"RETURN", Command::RETURN},
+        {"WAIT", Command::WAIT},
+        {"QUIT", Command::QUIT}
+    };
 
-        std::vector<std::string> defaultMessages = {
-    "SORRY, I DID NOT GET THAT, CAN YOU PLEASE REPEAT?",
-    "UNKNOWN COMMAND. TRY FOLLOWING INSTRUCTION, MAYBE.",
-    "HUH? THAT'S NOT AN OPTION, TRY AGAIN!"
+    std::vector<std::string> defaultMessages = {
+"SORRY, I DID NOT GET THAT, CAN YOU PLEASE REPEAT?\n",
+"UNKNOWN COMMAND. TRY FOLLOWING INSTRUCTION, MAYBE.\n",
+"HUH? THAT'S NOT AN OPTION, TRY AGAIN!\n"
     };
     //---
 
@@ -171,13 +183,15 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& te
                     if(check_username){
                         try{
                             if(!clients.add_client(client_fd, arg)){ //a one-time updating of the client_name in the threaded clients-list.
-                                throw Socket_Exception("SYSTEM ERR PROTOCOL " + confirmed_name + "'s name got corrupted.", errno);
+                                throw Socket_Exception("[CRITICAL SYSTEM ERROR] " + confirmed_name + "'s name got corrupted.", errno);
                             } 
                         }
                         catch(const Socket_Exception& e){ //a hard-stop program-shutdown in the case of name-corruption.
-                            send_all(client_fd, e.what(), confirmed_name); //:
+                            send_all(client_fd, e.what() + std::string("\n"), confirmed_name); //:
                             //note on the send_all design: this is an ugly alternative to try-catching every single send_all function call, but - 
                             //that would also be ugly...cpp doesn't make exception handling/throwing/rethrowing easy so even an ugly solution can be viable. 
+                            send_all(client_fd, "shutting down in 5 seconds...\n", confirmed_name);
+                            std::this_thread::sleep_for(std::chrono::seconds(5));
                             exit(1);
                         }
                         //in case all went well with appending to the clients list:
@@ -303,7 +317,15 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& te
         if(exit_flag == true) break;
     } 
 
-    //closing the connection:
-    if(clients.remove_client(client_fd)) close(client_fd);//removing the client from the threaded-clients list.
-    exit(1); //killing the whole program as a safety measure(file corruption with the clients list...).
+    //healthy closing the connection:
+    if(clients.remove_client(client_fd)){ //removing the client from the threaded-clients list.
+        close(client_fd); //normal fd closing.
+        close_client_thread(client_fd, confirmed_name); //normal thread exit.
+    }
+    else{
+        //killing the whole program as a safety measure(file corruption with the clients list...):
+        send_all(client_fd, "[CRITICAL SYSTEM ERROR] shutting down in 5 seconds...\n", confirmed_name);
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+        exit(1);
+    }
 }

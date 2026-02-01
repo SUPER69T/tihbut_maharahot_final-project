@@ -16,11 +16,11 @@ exceptions stack -(V)
 send error/exception messages to client -(V).
 add a queue(threaded?) to safe_print -(V).
 {server function names : IM functions} <unordered_map>, like python's oop implementation -(V).
+add time.now() to log messages -(X).
+
+
 
 client main:
-
-
-
 
 
 depricated:
