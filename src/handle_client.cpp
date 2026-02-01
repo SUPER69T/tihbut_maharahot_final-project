@@ -23,8 +23,7 @@ void close_client_thread(const int client_fd, const std::string confirmed_name){
     send_all(client_fd, "1...\n", confirmed_name);
     send_all(client_fd, "goodbye! <O_O>\n", confirmed_name);
     std::this_thread::sleep_for(std::chrono::seconds(2));
-    send_all(client_fd, "QUIT\n", confirmed_name);
-    //close(client_fd); //normal fd closing.
+    close(client_fd); //normal fd closing.
     return;
 }
 
@@ -153,7 +152,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
                 throw Socket_Exception("ERR PROTOCOL " + confirmed_name + " disconnected from server.", errno);
             } 
             send_all(client_fd, "\033[2J\033[1;1H\n", confirmed_name); //triggering the 'cls' command on the client's screen.
-            send_all(client_fd, "<SYNOPSIS>: HANDSHAKE: 'HELLO' + <username>, COMMANDS: <command> + <optional_parameter>\n", confirmed_name);
+            send_all(client_fd, "<SYNOPSIS>: HANDSHAKE: 'HELLO' + <username>, COMMANDS: <command> + <optional_parameter>.\n", confirmed_name);
 
             size_t space_pos = line.find(' '); //finds 'space' and splits into: command and argument.
 
@@ -169,7 +168,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
 
             if(!is_authenticated){ //in case the name-authentication hasn't occurred yet:
                 if(command != "HELLO"){ //in case the client hasn't commanded "HELLO" now:
-                    throw std::invalid_argument("ERR PROTOCOL you have to authenticate yourself first.");
+                    throw std::invalid_argument("you have to authenticate yourself first.");
                     continue; 
                 }
                 else if(command == "HELLO"){ //trying to authenticate now:
@@ -177,7 +176,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
 
                     //checks if the username is missing:
                     if(arg.empty()){ 
-                        throw std::invalid_argument("ERR PROTOCOL missing_username."); 
+                        throw std::invalid_argument("missing_username."); 
                         check_username = false;
                         continue; 
                     }
@@ -186,7 +185,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
                         if(!isalpha(c)){
                             is_authenticated = false;
                             check_username = false;
-                            throw std::invalid_argument("ERR PROTOCOL invalid_username.");
+                            throw std::invalid_argument("invalid_username.");
                         }
                     }
                     //if the username is valid:
