@@ -277,7 +277,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
                     } 
                 }
                 //Creating a new thread in order to handle each client as concurrent processes:
-                std::thread(handle_client, std::ref(client_fd), std::ref(clients), std::ref(temp_name), std::ref(inventory)).detach(); //(sending inventory by reference...).
+                std::thread(handle_client, std::ref(client_fd), std::ref(clients), temp_name, std::ref(inventory)).detach(); //(sending inventory by reference...).
                 //*Note - this type of manual socket-opening technique we use here is called "Blocking-socket opening".
                 //the reason it is discouraged(compared to non-Blocking alternatives like using select()/poll()/epoll()) is because - 
                 //every operation we do on a single socket(read/write...) haults the entire thread it occupies, thus enabling only the creation of - 

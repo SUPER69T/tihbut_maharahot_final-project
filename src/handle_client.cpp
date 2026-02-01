@@ -106,7 +106,7 @@ bool is_number(const std::string& s){
     return true;
 }
 
-void handle_client(const int client_fd, t_clients_list& clients, std::string& temp_name, Store::InventoryManager& inventory){
+void handle_client(const int client_fd, t_clients_list& clients, std::string temp_name, Store::InventoryManager& inventory){
 
     bool is_authenticated = false; //checking whether the user sent an entry - "Hello" message. 
 
@@ -243,6 +243,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string& te
             if(it == commandMap.end()){ //iterator ran over the entire map and didn't find "command" as a key.
                 rand_int = (rand() % 3); //a random value between - 0, and - 2.
                 send_all(client_fd, defaultMessages.at(rand_int), confirmed_name);
+                std::this_thread::sleep_for(std::chrono::seconds(1));
                 continue;
             }
             //---

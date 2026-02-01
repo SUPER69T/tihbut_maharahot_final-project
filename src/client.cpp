@@ -39,7 +39,7 @@ void listen_to_server(int fd){
     std::string reply;
     while (recv_line(fd, reply))
     {
-        std::cout << "\n[Server]: " << reply << std::flush; // "\n> " << 
+        std::cout << "\n[Server]: " << reply << "\n " << std::flush; 
     }
 }
 void client_thread(std::string server_ip, int port)
