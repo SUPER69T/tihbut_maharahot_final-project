@@ -71,10 +71,6 @@ void client_thread(std::string server_ip, int port)
     listener.detach();
     std::string st;
 
-    // std::string reply;
-    // if (recv_line(fd, reply)) {
-    //     std::cout << reply << std::endl;
-    // } DOESNT WORK !!
 
     while (true)
     {
@@ -88,7 +84,7 @@ void client_thread(std::string server_ip, int port)
         if (st == "QUIT\n")
         {
             std::string final_msg;
-            while(recv_line(fd, final_msg)) {
+            while(recv_line(fd, final_msg)) {//listening for a FIN-signal.
                 std::cout << "[Server]: " << final_msg << std::flush;
             }
             break; // exit the client if the command is exit

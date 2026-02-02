@@ -34,9 +34,7 @@
 //---
 //
 
-//locking:
-//#include <mutex>
-//#include <condition_variable>
+
 //
 //project specific:
 #include "Network_Exception.hpp"
@@ -72,33 +70,21 @@
 //just for fun...:
 int close_main(const int& err){ 
     thread_safe_logger::getInstance().log("Closing the server in:");
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
     thread_safe_logger::getInstance().log("3...");
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
     thread_safe_logger::getInstance().log("2...");
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
     thread_safe_logger::getInstance().log("1...\ngoodbye! <O_O>");
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
     return err;
 }
-/*
-bool is_timeout_reached(threaded_t_timer& timer){
-    std::mutex mtx;
-    std::unique_lock<std::mutex> ul(mtx);
-    std::condition_variable cv;
-    if(cv.wait(ul, [&timer](){timer.is_expired();}) == true){
-        throw Socket_Exception(timer.get_p_name() + "'s timeout_timer ran out.", 0); //:
-        //passing 0 as an errno-field for it not to print the wrong type of error... 
-    }
-}
-*/
-/*
-bool is_timeout_reached(threaded_t_timer timer){
-    if(!timer.is_expired()) return true;
-    throw Socket_Exception(timer.get_p_name() + "'s timeout_timer ran out.", 0); //:
-    //passing 0 as an errno-field for it not to print the wrong type of error... 
-}
-*/
+
+
 
 //-----
 //MAIN STARTS HERE:
@@ -143,10 +129,10 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
 
         t_clients_list clients(static_cast<size_t>(clients_limit));
 
-        //Creating an InventoryManager instance:
+        //creating an InventoryManager instance:
         //-----
         std::vector<Store::Item> items_vec;
-        items_vec.reserve(13); //Pre-allocates memory block to avoid reallocations. :).
+        items_vec.reserve(13); //pre-allocates memory block to avoid reallocations. :).
         items_vec.emplace_back(1, "Camera");
         items_vec.emplace_back(2, "Tripod");
         items_vec.emplace_back(3, "Laptop");
@@ -197,9 +183,9 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         // 4	   sin_addr	   struct in_addr (uint32)	4 bytes	   IPv4 Address (Big-Endian)
         // 8	   sin_zero	   char[8]	                8 bytes	   Padding (Must be all zeros)
 
-        server_addr.sin_family = AF_INET; //Sets the address family to IPv4.
+        server_addr.sin_family = AF_INET; //sets the address family to IPv4.
         server_addr.sin_addr.s_addr = htonl(INADDR_ANY); //INADDR_ANY = a constant representing the IPv4 wildcard address 0.0.0.0 -
-        //When passed to bind(), it instructs the operating system to accept incoming packets destined for -
+        //when passed to bind(), it instructs the operating system to accept incoming packets destined for -
         //any local IP address assigned to the host's network interfaces.
         //
         //while htonl(Host To Network Long): Converts a 32-bit number from host to network byte order -
@@ -227,13 +213,13 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
             }
         } 
         catch (const Bind_Exception& e){ //:this is the earliest moment in the code where we might start throwing exceptions.
-            //The manul errno checking(explained in - Network_Exception, line ~ 18):
+            //the manul errno checking(explained in - Network_Exception, line ~ 18):
             if(e.get_code() == 98){//Ideally this peace of code would be reused as boilerplate code but -
             //the spread out socket opening explanations were worth the extra space...   
                 server_addr.sin_port = htons(prt + 1); //trying to reopen the socket on a higher port number.
                 if(bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0){
                     throw Bind_Exception("second listening-socket binding socket operation failure in main.", errno); //if this part of the code throws an - 
-                    // error or fails is should just rethrow the Bind_Exception and finally take the entire code down with an error return value(-1).
+                    //error or fails is should just rethrow the Bind_Exception and finally take the entire code down with an error return value(-1).
                 }
             }
         }
@@ -253,10 +239,10 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         //5. (accepting a connection): 
         //-----
         std::string temp_name = "";
-        //Acceptting and handling a client's connection:
+        //acceptting and handling a client's connection:
         while(true){
             try{ // -> here we try to catch both the accept + thread, and the handle_client exceptions.
-                //Accepting a new client's connection:
+                //accepting a new client's connection:
                 const int client_fd = accept(server_fd, nullptr, nullptr); //each new socket connection established removes that - 
                 //"in-progress" object from the "backlog" queue initialized inside the "listen" operation, allowing new in-progress connections to enter that queue. 
                 //int client_fd =
@@ -271,42 +257,46 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
                     temp_name = clients.add_client(client_fd);
                     if(temp_name == ""){ //means that the clients list is full...
                         send_all(client_fd, "ERR PROTOCOL server is full.\n", "main");
-                        throw Socket_Exception("server is full message in main for: client_fd=" + std::to_string(client_fd) + ".", errno);
-                        close(client_fd);
-                        continue;  
+                        close(client_fd); //closing the newly open but corrupt socket.
+                        throw Socket_Exception("'server is full' exception in server.cpp's main for: client_fd=" + std::to_string(client_fd) + ".", errno);
                     } 
                 }
                 //Creating a new thread in order to handle each client as concurrent processes:
-                std::thread(handle_client, std::ref(client_fd), std::ref(clients), temp_name, std::ref(inventory)).detach(); //(sending inventory by reference...).
+                std::thread(handle_client, client_fd, std::ref(clients), temp_name, std::ref(inventory)).detach(); //(sending inventory by reference...).
                 //*Note - this type of manual socket-opening technique we use here is called "Blocking-socket opening".
                 //the reason it is discouraged(compared to non-Blocking alternatives like using select()/poll()/epoll()) is because - 
                 //every operation we do on a single socket(read/write...) haults the entire thread it occupies, thus enabling only the creation of - 
                 //a single socket on each thread, making it much slower and inefficient for robust programs with many clients to handle concurrently.
-            } //[handle_client, std::ref(client_fd), std::ref(clients), std::ref(current_name), std::ref(inventory)],[const int client_fd, t_clients_list& clients, std::string& client_name, Store::InventoryManager& inventory]
-            catch (const Socket_Exception& e){ //most likely recoverable:
+            } 
+            catch(const Socket_Exception& e){ //most likely recoverable:
                 continue; 
             }
-            catch (const Timeout_Exception& e){ //most likely unrecoverable:
+            catch(const Timeout_Exception& e){ //most likely unrecoverable:
                 throw; //rethrows Timeout_Exception.
             }
         }
     }
-    catch (const Bind_Exception& e){
+    //6. (closing the server socket):
+    //"unhealthy" closing:
+    //---
+    catch(const Bind_Exception& e){
         close(server_fd);
         return close_main(-1);
     }
-    catch (const Socket_Exception& e){
+    catch(const Socket_Exception& e){
         close(server_fd);
         return close_main(-1);
     }    
-    catch (const Timeout_Exception& e){
+    catch(const Timeout_Exception& e){
         close(server_fd);
         return close_main(-1);
     }
+    //---
     
-    //6. ("healthy" closing the server socket):
-    //-----
+    //"healthy" closing:
+    //---
+    close(server_fd);
     return close_main(0);
-    //-----
+    //---
 }
 //-----

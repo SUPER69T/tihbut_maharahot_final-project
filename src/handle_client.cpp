@@ -26,9 +26,14 @@ void close_client_thread(const int client_fd, const std::string confirmed_name){
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
-    catch(...){} //(...) = specifies that the catch block catches all the types errors.
-    close(client_fd); //normal fd closing.
+    catch(...){} //(...) = specifies that the catch block catches all the types errors... +
+    // + doing nothing with these exception throws since we're in the process of closing the socket connection.
+
+    //normal fd closing:
+    //---
+    close(client_fd); 
     return; //extra safety.
+    //---
 }
 
 //a safe sending of an entire string:
@@ -85,7 +90,7 @@ void send_all(int fd, const std::string& msg, const std::string& confirmed_name)
 bool recv_line(const int fd, std::string& out, size_t max_len = 4096){
     out.clear();
     char c;
-    while(out.size() < max_len) {
+    while(out.size() < max_len){
         ssize_t n = recv(fd, &c, 1, 0); //:
         //this approach is highly inefficient due to repeated calls to recv() for every single input character.
         //a better approach would involve buffering larger chunks of bytes each time and keeping track of the -
@@ -111,14 +116,13 @@ bool is_number(const std::string& s){
 
 void handle_client(const int client_fd, t_clients_list& clients, std::string temp_name, Store::InventoryManager& inventory){
 
-    bool is_authenticated = false; //checking whether the user sent an entry - "Hello" message. 
-
-    //variable initializations for the while loop:
+    //variable initializations for the while loop: 
     //-----
     //primitive types:
+    //*Note: just learned that primitive-types initializations inside of loops aren't as bad of an idea as I thought they were, and for several - 
+    //reasons like: (1.) scoped name declaration - extra name safety., (2.) compiler optimization - space on the stack is only allocated once.
     //---
-    //note: just learned that primitive-types initializations inside of loops aren't as bad of an idea as I thought they were, and for several - 
-    //reasons like: (1.) scoped name declaration - extra name safety., (2.) compiler optimization - space on the stack is only allocated once. 
+    bool is_authenticated = false; //checking whether the user sent an entry - "Hello" message. 
     bool check_username = true; //to authenticating the username.
     int itemID;
     int rand_int;
@@ -159,7 +163,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
             if(!recv_line(client_fd, line, 4096)){ //a check that closes the socket if the client disconnected or on other various 'recv' errors. 
                 throw Socket_Exception("ERR PROTOCOL " + confirmed_name + " disconnected from server.", errno);
             } 
-            else if(synopsis){
+            if(synopsis){
                 send_all(client_fd, "<SYNOPSIS>: HANDSHAKE: 'HELLO' + <username>, COMMANDS: <command> + <optional_parameter>.\n", confirmed_name);
                 synopsis = false;
             }
@@ -205,7 +209,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
                                 throw Socket_Exception("The name - " + arg + " exists already.", 0);
                             } 
                             if(!clients.add_client(client_fd, arg)){ //a one-time updating of the client_name in the threaded clients-list.
-                                throw Socket_Exception("Names-listen threshold reached.", 0);
+                                throw Socket_Exception("The clients list is full.", 0);
                             } 
                         }
                         catch(const Socket_Exception& e){ //a hard-stop socket-shutdown in the case of name-corruption.
