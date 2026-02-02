@@ -256,7 +256,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
                 else{ //a 3-way handshake has been established: 
                     temp_name = clients.add_client(client_fd);
                     if(temp_name == ""){ //means that the clients list is full...
-                        send_all(client_fd, "ERR PROTOCOL server is full.\n", "main");
+                        send_all(client_fd, "ERR PROTOCOL - the server is full!\n", "main");
                         close(client_fd); //closing the newly open but corrupt socket.
                         throw Socket_Exception("'server is full' exception in server.cpp's main for: client_fd=" + std::to_string(client_fd) + ".", errno);
                     } 
