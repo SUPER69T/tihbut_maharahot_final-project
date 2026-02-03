@@ -212,7 +212,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
                 //EINVAL: The socket is already bound to an address.
             }
         } 
-        catch (const Bind_Exception& e){ //:this is the earliest moment in the code where we might start throwing exceptions.
+        catch(const Bind_Exception& e){ //:this is the earliest moment in the code where we might start throwing exceptions.
             //the manul errno checking(explained in - Network_Exception, line ~ 18):
             if(e.get_code() == 98){//Ideally this peace of code would be reused as boilerplate code but -
             //the spread out socket opening explanations were worth the extra space...   
