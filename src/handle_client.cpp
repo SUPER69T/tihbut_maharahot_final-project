@@ -75,6 +75,9 @@ void send_all(int fd, const std::string& msg, const std::string& confirmed_name)
             if(errno == EAGAIN || errno == EWOULDBLOCK){ //errno = 11: EAGAIN(in linux), errno: 35 = EAGAIN(in macOS/BSD).
                 continue;
             }
+            if(errno == -666){
+                throw Timeout_Exception("ERR PROTOCOL - " + confirmed_name + "'s handle reached timeout.", errno);
+            }
             throw Socket_Exception("ERR PROTOCOL - " + confirmed_name + " had trouble in sending the message.", errno);
         }
         ///*
@@ -87,7 +90,8 @@ void send_all(int fd, const std::string& msg, const std::string& confirmed_name)
 }
 
 //TCP framing of each byte at a time, with a max of: default=1024 bytes, until we reach - '\n':
-bool recv_line(const int fd, std::string& out, size_t max_len = 4096){
+bool recv_line(const int fd, std::string& out, const std::string& confirmed_name, size_t max_len = 4096){ //:
+    //motherfuck this language 10 times, forcing default parameters to the end...why is it that important?
     out.clear();
     char c;
     while(out.size() < max_len){
@@ -97,7 +101,10 @@ bool recv_line(const int fd, std::string& out, size_t max_len = 4096){
         //current pos-index location on the buffered input stream. 
 
         if(n == 0) return false; //the connection was closed gracefully.
-        if(n < 0){ //best practice would adding additional checked conditions inside try-catch blocks for debugging.
+        if(n < 0){ //an error has occurred.
+            if(errno == -666){
+                throw Timeout_Exception("ERR PROTOCOL - " + confirmed_name + "'s handle reached timeout.", errno);
+            }
             return false; 
         }
         if(c == '\n') return true; //finished receiving the entire message.
@@ -159,14 +166,18 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
     while(true){ //handle_client's terminal-like - loop:
         try{
             send_all(client_fd, "\033[2J\033[1;1H\n", confirmed_name); //triggering the 'cls' command on the client's screen.
-            
-            if(!recv_line(client_fd, line, 4096)){ //a check that closes the socket if the client disconnected or on other various 'recv' errors. 
-                throw Socket_Exception("ERR PROTOCOL " + confirmed_name + " disconnected from server.", errno);
-            } 
+            std::this_thread::sleep_for(std::chrono::milliseconds(250));
+
             if(synopsis){
                 send_all(client_fd, "<SYNOPSIS>: HANDSHAKE: 'HELLO' + <username>, COMMANDS: <command> + <optional_parameter>.\n", confirmed_name);
                 synopsis = false;
             }
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+            if(!recv_line(client_fd, line, confirmed_name, 4096)){ //a check that closes the socket if the client disconnected or on other various 'recv' errors. 
+                throw Socket_Exception("ERR PROTOCOL " + confirmed_name + " disconnected from server.", errno);
+            } 
 
             size_t space_pos = line.find(' '); //finds 'space' and splits into: command and argument.
 
@@ -351,6 +362,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
         }
         catch(const Timeout_Exception& e){ //acts as a socket-closer in cases of timeout-exceptions.
             send_all(client_fd, e.what() + std::string("\n"), confirmed_name);
+            shutdown_signal = true;
             break;
         }
         catch(const std::invalid_argument& e){ //acts as a soft-exception in cases related to invalid-arguments.

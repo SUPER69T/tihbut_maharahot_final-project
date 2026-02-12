@@ -8,9 +8,10 @@
 #include <condition_variable>
 
 //constructor:
+//---
 //launching a background thread that runs in parralel to the caller:
-threaded_t_timer::threaded_t_timer(const std::string process_name, int socket_fd, std::chrono::seconds timeout, const int check_interval_ms)
-    : process_name(process_name), target_socket(socket_fd), timeout_duration(timeout), interval(check_interval_ms){
+threaded_t_timer::threaded_t_timer(const std::string process_name, std::chrono::seconds timeout, const int check_interval_ms)
+    : process_name(process_name), timeout_duration(timeout), interval(check_interval_ms){
 
     //first clock initialition:
     start_time = std::chrono::steady_clock::now();
@@ -40,9 +41,8 @@ threaded_t_timer::threaded_t_timer(const std::string process_name, int socket_fd
             }//end of extra scope.
 
                 //shutting down and closing the socket in case of a timeout:
-                if (target_socket != -1) {
-                    shutdown(target_socket, SHUT_RDWR); //shutdown tells the OS to stop any current I/O immediately.
-                    close(target_socket); //close releases the file descriptor.
+                if(target_socket != -1){
+                    shutdown(target_socket, SHUT_RDWR); //shutdown tells the OS to stop any current I/O immediately(send/recv...).
                 }
 
             cv.notify_all(); // Wake up anyone waiting for this signal
@@ -53,8 +53,10 @@ threaded_t_timer::threaded_t_timer(const std::string process_name, int socket_fd
         //here the thread exits quietly if the task is finished(caller exited the scope, which called the timer's destructor).
     });
 }
-//
+//---
+
 //destructor:
+//---
 threaded_t_timer::~threaded_t_timer(){
     //telling the thread to stop:
     active = false;
@@ -62,26 +64,29 @@ threaded_t_timer::~threaded_t_timer(){
     if(watcher.joinable()) watcher.join(); //:
     //joinable() = a boolean function that checks whether the thread can be joined...(self-explanatory).
 }
-//
+//---
 
-//
+//Methods:
+//---
+void threaded_t_timer::check_and_throw(){
+    std::unique_lock<std::mutex> lock(mtx);
+    try{
+        // We wait for the signal without a loop! 
+        // This will throw the exception the moment the watcher notifies us.
+        if(cv.wait_for(lock, std::chrono::milliseconds(1), [this]{return expired;})){
+            //goes here if the timer ran out:
+            throw Socket_Exception(process_name + "'s timeout_timer ran out.", 0); //:
+            //passing 0 as an errno-field for it not to print the wrong type of error... */
+        }
+    }
+    catch(Timeout_Exception& e){
+        delete this;
+    }
+}
+
 void threaded_t_timer::reset_timer(){
     std::lock_guard<std::mutex> lock(mtx);
     start_time = std::chrono::steady_clock::now();
     expired = false; //resets the signal too.
 }
-//
-
-//
-void threaded_t_timer::check_and_throw(){
-    std::unique_lock<std::mutex> lock(mtx);
-    
-    // We wait for the signal without a loop! 
-    // This will throw the exception the moment the watcher notifies us.
-    if (cv.wait_for(lock, std::chrono::milliseconds(1), [this]{return expired;})){
-         //goes here if the timer ran out:
-        throw Socket_Exception(process_name + "'s timeout_timer ran out.", 0); //:
-        //passing 0 as an errno-field for it not to print the wrong type of error... */
-    }
-}
-//
+//---

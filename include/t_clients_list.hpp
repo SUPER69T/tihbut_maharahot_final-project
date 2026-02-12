@@ -3,22 +3,36 @@
 #define T_CLIENTS_LIST_HPP
 
 #include <vector> //main list(contiguous memory).
-//we also allocate a <pair>-type for each client inside the vector.
+//we also allocate a "client_info"-struct for each client inside the vector.
 #include <mutex>
 #include <condition_variable>
+#include <atomic>
+#include <string>
+
+struct client_info{
+    int fd;
+    std::string name;
+    std::atomic<bool> is_timed_out;
+    
+    client_info(int f = 0, std::string n = "", bool t = false) 
+    : fd(f), name(n){
+        is_timed_out.store(t); //using .store() is the safest way to set an atomic's value.
+    }
+};
 
 class t_clients_list{
         private:
         //fields:  
         std::mutex mtx;
         std::condition_variable cv; 
-        std::vector<std::pair<int, std::string>> clients_list; //vectors support RAII, so no explicit destructor needed.
+        std::vector<std::unique_ptr<client_info>> clients_list; //vectors support RAII, so no explicit destructor needed.
+        //using the unique_ptr makes the non-copyable struct a moveable pointer that also supports RAII.
         //
 
         public:
         //constructors:
         t_clients_list(const size_t& size); //empty vector constructor.
-        t_clients_list(std::vector<std::pair<int, std::string>> vec, const size_t& size); 
+        t_clients_list(std::vector<std::unique_ptr<client_info>> vec, const size_t& size); 
 
         //public methods:
         //-----

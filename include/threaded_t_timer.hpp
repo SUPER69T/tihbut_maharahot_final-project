@@ -29,13 +29,13 @@ class threaded_t_timer {
         
     public:
     //constructor + destructor:
-    threaded_t_timer(const std::string process_name, int socket_fd, std::chrono::seconds timeout, const int check_interval_ms);
+    threaded_t_timer(const std::string process_name, std::chrono::seconds timeout, const int check_interval_ms);
     ~threaded_t_timer(); //ensures the thread joins/detaches safely.
     //
-    std::string const get_p_name(){return this->process_name;}
+    inline std::string const get_p_name(){return this->process_name;}
     void check_and_throw(); //updates start_time to "now".
     void reset_timer();
-    bool is_expired(){return this->expired;}; //this check is suppose to be done by the caller.
+    inline bool is_expired(){return this->expired;}; //allows the caller to manually check the state of the timer.
 };
 
 #endif
