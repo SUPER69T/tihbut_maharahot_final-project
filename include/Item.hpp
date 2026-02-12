@@ -16,11 +16,15 @@ namespace Store{
             Item(int id,const std::string& name);
             Item();
 
+            //---
+            //by default: primitives return copies, no need for "const" return modifier:
             int getId() const;
-            std::string& getName() ;
             bool isAvailable() const;
-            std::string& getBorrower();
-
+            //by default: objects return references, a const function contract requires a const return type:
+            const std::string& getName() const;
+            const std::string& getBorrower() const;
+            //---
+            
             void borrow(const std::string& username);
             void returnBack(const std::string& username);
             std::string toString() const;

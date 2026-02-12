@@ -6,6 +6,7 @@
 #include <vector>
 #include <mutex>
 #include <condition_variable>
+#include <atomic>
 
 namespace Store{
 
@@ -18,7 +19,7 @@ namespace Store{
         std::mutex mtx;
         std::condition_variable cv; 
         std::string listItems(std::vector<Item>& items); //could have also implemented "string_view_literals".
-        static int total_IMs;
+        static std::atomic<int> total_IMs;
         int IM_Id = 0;
 
         //Private methods:
@@ -30,7 +31,7 @@ namespace Store{
         //-----
         //Constructors:
         InventoryManager(); //empty constructor.
-        InventoryManager(const std::vector<Item>& items); //Item-type vector-reference receiving constructor.
+        InventoryManager(std::vector<Item> items); //Item-type-vector copy-constructor.
         //
 
         //Destructor:

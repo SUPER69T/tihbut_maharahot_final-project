@@ -305,13 +305,28 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
                 //---
                 //waits until an item is available:
                 case Command::WAIT:{
-                    //the thread will wait until the item is available. it isn't practical for real life code implementation but for this project it will have to do...:
+                    //the thread will wait until the item is available. it isn't practical for real life code - 
+                    //implementation but for this project's given instructions it will have to do...:
                     inventory.waitUntilAvailable(itemID, confirmed_name);
                     send_all(client_fd, "OK AVAILABLE " + std::to_string(itemID) + "\n", confirmed_name);
                     break;
                 }
                 //---
+                /*
+                //---
+                //
+                case Command::LOGS:{
+                    
+                }
+                //---
 
+                //---
+                //
+                case Command::MESSAGE:{
+                    
+                }
+                //---
+                */
                 //---
                 //stops the connection between the server and the client:
                 case Command::QUIT:{
