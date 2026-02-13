@@ -13,16 +13,16 @@
 #include "t_clients_list.hpp"       
 
 //just for fun...:
-void close_client_thread(const int client_fd, const std::string confirmed_name, t_clients_list& clients){ 
+void close_client_thread(const int client_fd, const std::string confirmed_name, t_clients_list& clients_list){ 
     try{
-    send_all(client_fd, confirmed_name, clients, "Closing the connection in:\n");
-    send_all(client_fd, confirmed_name, clients, "3...\n");
+    send_all(client_fd, confirmed_name, clients_list, "Closing the connection in:\n");
+    send_all(client_fd, confirmed_name, clients_list, "3...\n");
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    send_all(client_fd, confirmed_name, clients, "2...\n");
+    send_all(client_fd, confirmed_name, clients_list, "2...\n");
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    send_all(client_fd, confirmed_name, clients, "1...\n");
+    send_all(client_fd, confirmed_name, clients_list, "1...\n");
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    send_all(client_fd, confirmed_name, clients, "goodbye! <O_O>\n");
+    send_all(client_fd, confirmed_name, clients_list, "goodbye! <O_O>\n");
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
@@ -37,7 +37,7 @@ void close_client_thread(const int client_fd, const std::string confirmed_name, 
 }
 
 //a safe sending of an entire string:
-void send_all(int fd, const std::string& confirmed_name, t_clients_list& clients, const std::string& msg){
+void send_all(int fd, const std::string& confirmed_name, t_clients_list& clients_list, const std::string& msg){
     size_t sent = 0;
     while(sent < msg.size()){ //only entering if the entire string hasn't been sent yet.
         ssize_t n = send(fd, msg.data() + sent, msg.size() - sent, MSG_NOSIGNAL); //:
@@ -75,8 +75,8 @@ void send_all(int fd, const std::string& confirmed_name, t_clients_list& clients
             if(errno == EAGAIN || errno == EWOULDBLOCK){ //errno = 11: EAGAIN(in linux), errno: 35 = EAGAIN(in macOS/BSD).
                 continue;
             }
-            if(clients.is_client_timed_out(fd)){
-                throw Timeout_Exception("ERR PROTOCOL - " + confirmed_name + "'s handle reached timeout.", errno);
+            if(clients_list.is_client_timed_out(fd)){
+                throw Timeout_Exception("ERR PROTOCOL - " + confirmed_name + "'s handle reached timeout.", 0);
             }
             throw Socket_Exception("ERR PROTOCOL - " + confirmed_name + " had trouble in sending the message.", errno);
         }
@@ -90,7 +90,7 @@ void send_all(int fd, const std::string& confirmed_name, t_clients_list& clients
 }
 
 //TCP framing of each byte at a time, with a max of: default=1024 bytes, until we reach - '\n':
-bool recv_line(const int fd, const std::string& confirmed_name, t_clients_list& clients, std::string& out, size_t max_len = 4096){ //:
+bool recv_line(const int fd, const std::string& confirmed_name, t_clients_list& clients_list, std::string& out, size_t max_len = 4096){ //:
     //motherfuck this language 10 times, forcing default parameters to the end...why is it that important?
     out.clear();
     char c;
@@ -102,8 +102,8 @@ bool recv_line(const int fd, const std::string& confirmed_name, t_clients_list& 
 
         if(n == 0) return false; //the connection was closed gracefully.
         if(n < 0){ //an error has occurred.
-            if(clients.is_client_timed_out(fd)){
-                throw Timeout_Exception("ERR PROTOCOL - " + confirmed_name + "'s handle reached timeout.", errno);
+            if(clients_list.is_client_timed_out(fd)){
+                throw Timeout_Exception("ERR PROTOCOL - " + confirmed_name + "'s handle reached timeout.", 0);
             }
             return false; 
         }
@@ -121,7 +121,7 @@ bool is_number(const std::string& s){
     return true;
 }
 
-void handle_client(const int client_fd, t_clients_list& clients, std::string temp_name, Store::InventoryManager& inventory){//:
+void handle_client(const int client_fd, t_clients_list& clients_list, std::string temp_name, Store::InventoryManager& inventory){//:
     //passing the client into methods 2 approaches: 
     //1.client_info struct:
     //simple and easy, simply passing the struct object itself that already contains all the useful client info we need, less safe.
@@ -173,17 +173,17 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
     //process client-commands:         
     while(true){ //handle_client's terminal-like - loop:
         try{
-            send_all(client_fd, confirmed_name, clients, "\033[2J\033[1;1H\n"); //triggering the 'cls' command on the client's screen.
+            send_all(client_fd, confirmed_name, clients_list, "\033[2J\033[1;1H\n"); //triggering the 'cls' command on the client's screen.
             std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
             if(synopsis){
-                send_all(client_fd, confirmed_name, clients, "<SYNOPSIS>: HANDSHAKE: 'HELLO' + <username>, COMMANDS: <command> + <optional_parameter>.\n");
+                send_all(client_fd, confirmed_name, clients_list, "<SYNOPSIS>: HANDSHAKE: 'HELLO' + <username>, COMMANDS: <command> + <optional_parameter>.\n");
                 synopsis = false;
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-            if(!recv_line(client_fd, confirmed_name, clients, line, 4096)){ //a check that closes the socket if the client disconnected or on other various 'recv' errors. 
+            if(!recv_line(client_fd, confirmed_name, clients_list, line, 4096)){ //a check that closes the socket if the client disconnected or on other various 'recv' errors. 
                 throw Socket_Exception("ERR PROTOCOL " + confirmed_name + " disconnected from server.", errno);
             } 
 
@@ -224,15 +224,15 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
                     //if the username is valid:
                     if(check_username){
                         try{
-                            if(clients.contains(arg)){
+                            if(clients_list.contains(arg)){
                                 throw Socket_Exception("The name - " + arg + " exists already.", 0);
                             } 
-                            if(!clients.add_client(client_fd, arg)){ //a one-time updating of the client_name in the threaded clients-list.
+                            if(!clients_list.add_client(client_fd, arg)){ //a one-time updating of the client_name in the threaded clients-list.
                                 throw Socket_Exception("The clients list is full.", 0);
                             } 
                         }
                         catch(const Socket_Exception& e){ //a hard-stop socket-shutdown in the case of name-corruption.
-                            send_all(client_fd, confirmed_name, clients, e.what() + std::string("\n"));//:
+                            send_all(client_fd, confirmed_name, clients_list, e.what() + std::string("\n"));//:
                             //note on the send_all design: this is an ugly alternative to try-catching every single send_all function call, but - 
                             //that would also be ugly...cpp doesn't make exception handling/throwing/rethrowing easy so even an ugly solution can be viable. 
                             close_client_thread(client_fd, confirmed_name);
@@ -242,7 +242,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
                         //
                         is_authenticated = true; //the user is valid.
                         confirmed_name = arg;
-                        send_all(client_fd, confirmed_name, clients, "OK HELLO, " + confirmed_name +"!\n");
+                        send_all(client_fd, confirmed_name, clients_list, "OK HELLO, " + confirmed_name +"!\n");
                         continue;
                         //
                         //authentication completed.
@@ -275,7 +275,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
             auto it = commandMap.find(command);
             if(it == commandMap.end()){ //iterator ran over the entire map and didn't find "command" as a key.
                 rand_int = (rand() % 3); //a random value between - 0, and - 2.
-                send_all(client_fd, confirmed_name, clients, defaultMessages.at(rand_int));
+                send_all(client_fd, confirmed_name, clients_list, defaultMessages.at(rand_int));
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 continue;
@@ -297,7 +297,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
                     //gets the list of items from inventory:
                     std::string response = inventory.listItems();
                     //sends the response to the client:
-                    send_all(client_fd, confirmed_name, clients, response+"\n");
+                    send_all(client_fd, confirmed_name, clients_list, response+"\n");
                     break;
                 }
                 //---
@@ -307,7 +307,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
                 case Command::BORROW:{
                     //attempts to borrow the item from the InventoryManager:
                     inventory.borrowItem(itemID, confirmed_name);
-                    send_all(client_fd, confirmed_name, clients, "OK BORROW "+std::to_string(itemID) + "\n");
+                    send_all(client_fd, confirmed_name, clients_list, "OK BORROW "+std::to_string(itemID) + "\n");
                     break;
                 }
                 //---
@@ -316,7 +316,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
                 //returns an item:
                 case Command::RETURN:{
                     inventory.returnItem(itemID, confirmed_name);
-                    send_all(client_fd, confirmed_name, clients, "OK RETURN " + std::to_string(itemID) + "\n");
+                    send_all(client_fd, confirmed_name, clients_list, "OK RETURN " + std::to_string(itemID) + "\n");
                     break;
                 }
                 //---
@@ -327,7 +327,7 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
                     //the thread will wait until the item is available. it isn't practical for real life code - 
                     //implementation but for this project's given instructions it will have to do...:
                     inventory.waitUntilAvailable(itemID, confirmed_name);
-                    send_all(client_fd, confirmed_name, clients, "OK AVAILABLE " + std::to_string(itemID) + "\n");
+                    send_all(client_fd, confirmed_name, clients_list, "OK AVAILABLE " + std::to_string(itemID) + "\n");
                     break;
                 }
                 //---
@@ -357,11 +357,11 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
             //-----
         }
         catch(const Store::Item_exception& e){ //acts as a soft-exception in cases related to Item-exceptions.
-            send_all(client_fd, confirmed_name, clients, std::string("ERR ") + e.what() + "\n");
+            send_all(client_fd, confirmed_name, clients_list, std::string("ERR ") + e.what() + "\n");
             continue;
         }
         catch(const Store::IM_exception& e){ //acts as a soft-exception in cases related to InventoryManager-exceptions.
-            send_all(client_fd, confirmed_name, clients, std::string("ERR ") + e.what() + "\n");
+            send_all(client_fd, confirmed_name, clients_list, std::string("ERR ") + e.what() + "\n");
             continue;
         }
         catch(const Socket_Exception& e){ //acts as a hard-socket-closer in cases of socket-exceptions.
@@ -369,21 +369,21 @@ void handle_client(const int client_fd, t_clients_list& clients, std::string tem
             break;
         }
         catch(const Timeout_Exception& e){ //acts as a soft-socket-closer in cases of timeout-exceptions.
-            send_all(client_fd, confirmed_name, clients, e.what() + std::string("\n"));
+            send_all(client_fd, confirmed_name, clients_list, e.what() + std::string("\n"));
             break;
         }
         catch(const std::invalid_argument& e){ //acts as a soft-exception in cases related to invalid-arguments.
-            send_all(client_fd, confirmed_name, clients, std::string("ERR STATE for - ") + confirmed_name + ": " + e.what() + "\n");
+            send_all(client_fd, confirmed_name, clients_list, std::string("ERR STATE for - ") + confirmed_name + ": " + e.what() + "\n");
             continue;
         }
 
         if(exit_flag == true) break;
     } 
 
-    bool removed_safely = clients.remove_client(client_fd);
+    bool removed_safely = clients_list.remove_client(client_fd);
     //healthy closing the connection:
     if(!socket_err && removed_safely){ //removing the client from the threaded-clients list.
-        close_client_thread(client_fd, confirmed_name, clients); //normal thread exit.
+        close_client_thread(client_fd, confirmed_name, clients_list); //normal thread exit.
     }
     else{
         //killing the whole program as a safety measure(file corruption with the clients list/thrown Socket_Exception...): 

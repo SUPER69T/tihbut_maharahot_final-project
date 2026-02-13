@@ -37,6 +37,17 @@ bool t_clients_list::contains(const std::string client_name){
     return false;
 }
 
+bool t_clients_list::set_client_timed_out(const int client_fd){
+    std::lock_guard<std::mutex> lock(mtx); 
+    for(auto& p : this->clients_list){
+        if(p && p->fd == client_fd){
+            p->is_timed_out = true;
+            return true;
+        }
+    }
+    return false; //default = false, when: invalid client_info ptr / fd < 0 / or in case no client matching.
+}
+
 bool t_clients_list::is_client_timed_out(const int client_fd){
     std::lock_guard<std::mutex> lock(mtx); 
     for(auto& p : this->clients_list){

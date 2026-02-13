@@ -8,17 +8,19 @@
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
+#include "t_clients_list.hpp"
 
-class threaded_t_timer {
+class threaded_t_timer{
     private:
     //4 construction inputs:
-    std::string process_name;
-    int target_socket;
-    std::chrono::seconds timeout_duration;
+    int fd;
+    std::string client_name;
+    t_clients_list& clients_list;
+    std::chrono::seconds timeout;
     int interval; //allows extra modification.
     //
 
-    // Tracks the current "start" of the countdown
+    //tracks the current "start" of the countdown
     std::atomic<std::chrono::steady_clock::time_point> start_time;
     std::atomic<bool> active{true}; //used in the check-condition for the running timer-thread.
     bool expired = false; //used to check if the timeout was reached.
@@ -29,13 +31,15 @@ class threaded_t_timer {
         
     public:
     //constructor + destructor:
-    threaded_t_timer(const std::string process_name, std::chrono::seconds timeout, const int check_interval_ms);
+    threaded_t_timer(const int fd, const std::string client_name, t_clients_list& clients_list, std::chrono::seconds timeout_seconds, const int check_interval_ms);
     ~threaded_t_timer(); //ensures the thread joins/detaches safely.
     //
-    inline std::string const get_p_name(){return this->process_name;}
-    void check_and_throw(); //updates start_time to "now".
-    void reset_timer();
+
+    //Methods:
+    inline std::string const get_p_name(){return this->client_name;}
+    void reset_timer_or_throw();
     inline bool is_expired(){return this->expired;}; //allows the caller to manually check the state of the timer.
+    //
 };
 
 #endif

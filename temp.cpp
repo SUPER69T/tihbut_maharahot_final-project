@@ -34,21 +34,15 @@ threaded_t_timer::threaded_t_timer(const int fd, const std::string client_name, 
             //load() = atomically retrieve the current value from an atomic variable.
 
             if(elapsed >= timeout){
-            //signaling the timeout:
-            {//extra scope to RAII the lock_guard.
-                std::lock_guard<std::mutex> lock(mtx);
-                expired = true;
-            }//end of extra scope.
-
                 //shutting down and closing the socket in case of a timeout:
                 if(this->clients_list.set_client_timed_out(this->fd)){ //:
                     //skips this block when: invalid client_info ptr / fd < 0 / or in case no client matches the given fd.
                     shutdown(this->fd, SHUT_RDWR); //shutdown tells the OS to stop any current I/O immediately(send/recv...).
-                    return;
                 }
+                active = false;
             }
             std::unique_lock<std::mutex> lock(mtx);
-            cv.wait_for(lock, std::chrono::milliseconds(interval), [this]{return !active || expired;});
+            cv.wait_for(lock, std::chrono::milliseconds(interval), [this]{return !active;});
         }
     });
 } //here the constructor finished running, the watcher thread now runs independantly until either:
@@ -78,7 +72,7 @@ threaded_t_timer::~threaded_t_timer(){
 //---
 void threaded_t_timer::reset_timer_or_throw(){
     std::lock_guard<std::mutex> lock(mtx);
-    if(expired){
+    if(!active){
         throw Timeout_Exception(client_name + "'s timeout_timer ran out.", 0); //:
         //passing 0 as an errno-field for it not to print the wrong type of error... */
     }

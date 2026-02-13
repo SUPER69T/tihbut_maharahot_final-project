@@ -9,13 +9,15 @@
 #include <atomic>
 #include <string>
 
-struct client_info{
-    int fd;
+struct client_info{//:
+    //apparently "heap fragmentation" is a thing... so assinging the largest data - 
+    //types first is a good idea when building new structs...
     std::string name;
+    int fd;
     std::atomic<bool> is_timed_out;
     
     client_info(int f = 0, std::string n = "", bool t = false) 
-    : fd(f), name(n){
+    : name(n), fd(f){
         is_timed_out.store(t); //using .store() is the safest way to set an atomic's value.
     }
 };
@@ -37,6 +39,7 @@ class t_clients_list{
         //public methods:
         //-----
         bool contains(const std::string client_name);
+        bool set_client_timed_out(const int client_fd);
         bool is_client_timed_out(const int client_fd);
         //---
         //initializes a client with client_fd:
