@@ -11,10 +11,22 @@
 //---
 //launching a background thread that runs in parralel to the caller:
 threaded_t_timer::threaded_t_timer(const int fd, const std::string client_name, t_clients_list& clients_list, std::chrono::seconds timeout_seconds, const int check_interval_ms)
-    : fd(fd), client_name(client_name), clients_list(clients_list), timeout(timeout_seconds), interval(check_interval_ms){
-
+    : fd(fd), client_name(client_name),
+    clients_list(clients_list), 
+    //assigning default timeout and interval:
+    timeout((timeout_seconds.count() < 1 || 1200 < timeout_seconds.count()) 
+          ? std::chrono::seconds(30) //default timeout(in seconds).
+          : timeout_seconds), 
+    interval((check_interval_ms < 5 || 5000 < check_interval_ms) 
+          ? 50 ////default interval(in ms).
+          : check_interval_ms)
+    //
+{
     //first time snapshot:
     start_time = std::chrono::steady_clock::now();
+    //
+    active = true;
+    expired = false;
 
     //a lambda function as each new timer-thread's process, all inside the timer's constructor:
     //---
@@ -26,29 +38,28 @@ threaded_t_timer::threaded_t_timer(const int fd, const std::string client_name, 
         //because it captures the THE CONSTRUCTOR's local variables, which get destroyed when it -
         //finishes constructing the object, leaving the thread with "dangling references" to garbage memory.
         //
-        while(active){
-            auto now = std::chrono::steady_clock::now();//:
-            //auto is easier than: "std::chrono::time_point<std::chrono::steady_clock>"...
-            auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - start_time.load());//:
-            //duration_cast<>() = a function that converts std::chrono::duration types from one to another.
-            //load() = atomically retrieve the current value from an atomic variable.
-
-            if(elapsed >= timeout){
-            //signaling the timeout:
-            {//extra scope to RAII the lock_guard.
+        while(active && !expired){
+            {
                 std::lock_guard<std::mutex> lock(mtx);
-                expired = true;
-            }//end of extra scope.
+                auto now = std::chrono::steady_clock::now();//:
+                //auto is easier than: "std::chrono::time_point<std::chrono::steady_clock>"...
+                auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - start_time.load());//:
+                //duration_cast<>() = a function that converts std::chrono::duration types from one to another.
+                //load() = atomically retrieve the current value from an atomic variable.
 
-                //shutting down and closing the socket in case of a timeout:
-                if(this->clients_list.set_client_timed_out(this->fd)){ //:
-                    //skips this block when: invalid client_info ptr / fd < 0 / or in case no client matches the given fd.
-                    shutdown(this->fd, SHUT_RDWR); //shutdown tells the OS to stop any current I/O immediately(send/recv...).
-                    return;
+                if(elapsed >= timeout){
+                    //shutting down and closing the socket in case of a timeout:
+                    if(this->clients_list.set_client_timed_out(this->fd)){ //:
+                        //skips this block when: invalid client_info ptr / fd < 0 / or in case no client matches the given fd.
+                        shutdown(this->fd, SHUT_RDWR); //shutdown tells the OS to stop any current I/O immediately(send/recv...).
+                        expired  = true;
+                    }
                 }
             }
-            std::unique_lock<std::mutex> lock(mtx);
-            cv.wait_for(lock, std::chrono::milliseconds(interval), [this]{return !active || expired;});
+            if(active && !expired){
+                std::unique_lock<std::mutex> lock(mtx);
+                cv.wait_for(lock, std::chrono::milliseconds(interval), [this]{return !active || expired;});
+            }
         }
     });
 } //here the constructor finished running, the watcher thread now runs independantly until either:

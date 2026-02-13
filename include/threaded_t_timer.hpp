@@ -24,9 +24,10 @@ class threaded_t_timer{
     std::atomic<std::chrono::steady_clock::time_point> start_time;
     std::atomic<bool> active{true}; //used in the check-condition for the running timer-thread.
     bool expired = false; //used to check if the timeout was reached.
-    std::thread watcher;
     std::mutex mtx;             
     std::condition_variable cv;
+    std::thread watcher; //should be initialized last, after all other fields get constructed -
+    //to ensure the watcher thread won't try accessing uninitialized object fields.
     //
         
     public:
