@@ -12,10 +12,10 @@
 void close_client_thread(const int client_fd, const std::string confirmed_name);
 
 //sending an entire message:
-void send_all(const int fd, const std::string& msg, const std::string& confirmed_name);
+void send_all(int fd, const std::string& confirmed_name, t_clients_list& clients, const std::string& msg);
 
 //receiving a line:
-bool recv_line(const int fd, std::string& out, const std::string& confirmed_name, size_t max_len);
+bool recv_line(const int fd, const std::string& confirmed_name, t_clients_list& clients, std::string& out, size_t max_len);
 
 //checking whether a string is all digits:
 bool is_number(const std::string& s);

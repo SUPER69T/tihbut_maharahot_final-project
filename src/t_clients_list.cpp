@@ -37,6 +37,14 @@ bool t_clients_list::contains(const std::string client_name){
     return false;
 }
 
+bool t_clients_list::is_client_timed_out(const int client_fd){
+    std::lock_guard<std::mutex> lock(mtx); 
+    for(auto& p : this->clients_list){
+        if(p && p->fd == client_fd) return p->is_timed_out == true;
+    }
+    return false; //default = false, in-case no client matching.
+}
+
 std::string t_clients_list::add_client(const int client_fd){
     std::lock_guard<std::mutex> lock(mtx); 
     std::string default_name = "";
