@@ -49,10 +49,10 @@ threaded_t_timer::threaded_t_timer(const int fd, const std::string client_name, 
 
                 if(elapsed >= timeout){
                     //shutting down and closing the socket in case of a timeout:
+                    expired  = true;
                     if(this->clients_list.set_client_timed_out(this->fd)){ //:
                         //skips this block when: invalid client_info ptr / fd < 0 / or in case no client matches the given fd.
                         shutdown(this->fd, SHUT_RDWR); //shutdown tells the OS to stop any current I/O immediately(send/recv...).
-                        expired  = true;
                     }
                 }
             }
