@@ -37,8 +37,9 @@ class threaded_t_timer{
     //
 
     //Methods:
-    inline std::string const get_p_name(){return this->client_name;}
     void reset_timer_or_throw();
+    void update_name(std::string& new_client_name);
+    inline std::string const get_p_name(){return this->client_name;}
     inline bool is_expired(){return this->expired;}; //allows the caller to manually check the state of the timer.
     //
 };

@@ -42,9 +42,9 @@ class t_clients_list{
         bool set_client_timed_out(const int client_fd);
         bool is_client_timed_out(const int client_fd);
         //---
-        //initializes a client with client_fd:
+        //adds a new client in server.cpp's main:
         std::string add_client(const int client_fd);
-        //adds a new name \ updates a pre-existing name based on a given client_fd:
+        //updates the pre-existing name in handle_client.cpp:
         bool add_client(const int client_fd, const std::string client_name);
         //---
 

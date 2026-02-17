@@ -9,7 +9,7 @@
 #include <t_clients_list.hpp>
 
 //just for fun...:
-void close_client_thread(const int client_fd, const std::string confirmed_name);
+void close_client_thread(const int client_fd, const std::string confirmed_name, t_clients_list& clients_list);
 
 //sending an entire message:
 void send_all(int fd, const std::string& confirmed_name, t_clients_list& clients_list, const std::string& msg);

@@ -10,18 +10,24 @@
 #include "Network_Exception.hpp"                
 #include "Item_exception.hpp"
 #include "IM_exception.hpp"
-#include "t_clients_list.hpp"       
+#include "t_clients_list.hpp"  
+#include "threaded_t_timer.hpp"     
 
 //just for fun...:
-void close_client_thread(const int client_fd, const std::string confirmed_name, t_clients_list& clients_list){ 
+void close_client_thread(const int client_fd, const std::string confirmed_name, t_clients_list& clients_list){
+    //*Note on the alternating sleep_for(): some system calls take longer time to process and can cause - 
+    //timeline-inconsistency, like in our case: sometimes slee_for() will happen before send_all(). 
     try{
     send_all(client_fd, confirmed_name, clients_list, "Closing the connection in:\n");
     send_all(client_fd, confirmed_name, clients_list, "3...\n");
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
     send_all(client_fd, confirmed_name, clients_list, "2...\n");
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
     send_all(client_fd, confirmed_name, clients_list, "1...\n");
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
     send_all(client_fd, confirmed_name, clients_list, "goodbye! <O_O>\n");
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -170,23 +176,34 @@ void handle_client(const int client_fd, t_clients_list& clients_list, std::strin
     };
     //-----
 
+    //timeout initiation:
+    threaded_t_timer timeout_timer(client_fd, temp_name, clients_list, std::chrono::seconds(30), 200);
+    //
+
     //process client-commands:         
     while(true){ //handle_client's terminal-like - loop:
         try{
+            timeout_timer.reset_timer_or_throw();
             send_all(client_fd, confirmed_name, clients_list, "\033[2J\033[1;1H\n"); //triggering the 'cls' command on the client's screen.
-            std::this_thread::sleep_for(std::chrono::milliseconds(250));
+            //*Note on the send_all design: this is an ugly alternative to try-catching every single send_all function call, but that would - 
+            //also be ugly...cpp doesn't make exception handling/throwing/rethrowing easy so an ugly solution sometimes is the only one. 
+            timeout_timer.reset_timer_or_throw();
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
             if(synopsis){
                 send_all(client_fd, confirmed_name, clients_list, "<SYNOPSIS>: HANDSHAKE: 'HELLO' + <username>, COMMANDS: <command> + <optional_parameter>.\n");
+                timeout_timer.reset_timer_or_throw();
                 synopsis = false;
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
             if(!recv_line(client_fd, confirmed_name, clients_list, line, 4096)){ //a check that closes the socket if the client disconnected or on other various 'recv' errors. 
+                timeout_timer.reset_timer_or_throw();
                 throw Socket_Exception("ERR PROTOCOL " + confirmed_name + " disconnected from server.", errno);
             } 
-
+            timeout_timer.reset_timer_or_throw();
             size_t space_pos = line.find(' '); //finds 'space' and splits into: command and argument.
 
             if(space_pos != std::string::npos){ //if there is a space we take the first half to be the commend and the second half to be the argument.
@@ -227,15 +244,15 @@ void handle_client(const int client_fd, t_clients_list& clients_list, std::strin
                             if(clients_list.contains(arg)){
                                 throw Socket_Exception("The name - " + arg + " exists already.", 0);
                             } 
+                            //this portion re-checks whether the clients list is full or not.
                             if(!clients_list.add_client(client_fd, arg)){ //a one-time updating of the client_name in the threaded clients-list.
-                                throw Socket_Exception("The clients list is full.", 0);
+                                throw Socket_Exception("A name-matching error has occurred.", 0); //:
+                                //this case is explained in t_clients_list.cpp in the second add_client method.
                             } 
                         }
                         catch(const Socket_Exception& e){ //a hard-stop socket-shutdown in the case of name-corruption.
-                            send_all(client_fd, confirmed_name, clients_list, e.what() + std::string("\n"));//:
-                            //note on the send_all design: this is an ugly alternative to try-catching every single send_all function call, but - 
-                            //that would also be ugly...cpp doesn't make exception handling/throwing/rethrowing easy so even an ugly solution can be viable. 
-                            close_client_thread(client_fd, confirmed_name);
+                            send_all(client_fd, confirmed_name, clients_list, e.what() + std::string("\n"));
+                            close_client_thread(client_fd, confirmed_name, clients_list);
                             return;
                         }
                         //in case all went well with appending to the clients list:
@@ -276,6 +293,7 @@ void handle_client(const int client_fd, t_clients_list& clients_list, std::strin
             if(it == commandMap.end()){ //iterator ran over the entire map and didn't find "command" as a key.
                 rand_int = (rand() % 3); //a random value between - 0, and - 2.
                 send_all(client_fd, confirmed_name, clients_list, defaultMessages.at(rand_int));
+                timeout_timer.reset_timer_or_throw();
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 continue;
@@ -383,6 +401,7 @@ void handle_client(const int client_fd, t_clients_list& clients_list, std::strin
     bool removed_safely = clients_list.remove_client(client_fd);
     //healthy closing the connection:
     if(!socket_err && removed_safely){ //removing the client from the threaded-clients list.
+        timeout_timer.reset_timer_or_throw();
         close_client_thread(client_fd, confirmed_name, clients_list); //normal thread exit.
     }
     else{

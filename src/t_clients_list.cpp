@@ -77,6 +77,12 @@ bool t_clients_list::add_client(const int client_fd, const std::string client_na
             return true;
         }
     }
+    //this portion of the code violates the Single-Responsibility-Principle from SOLID:
+    //-----
+    //the only way this add_client method was called is if server.cpp's main assigned the socket an -
+    //fd(by using the first add_client method), and we "passed" the socket testing section of the code.
+    //re-assigning a new client_name to an empty fd from here might cause bugs and confusion along the way. 
+    /*
     for(auto& p : this->clients_list){ //adding a new client in case there is no pre-existing.
         if(p && p->fd == 0){
             p->fd = client_fd;
@@ -84,6 +90,8 @@ bool t_clients_list::add_client(const int client_fd, const std::string client_na
             return true;
         }
     }
+    */
+    //-----
     return false;
 }
 //---

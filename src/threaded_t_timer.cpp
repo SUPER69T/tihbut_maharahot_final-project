@@ -95,4 +95,11 @@ void threaded_t_timer::reset_timer_or_throw(){
     }
     start_time = std::chrono::steady_clock::now();
 }
+
+void threaded_t_timer::update_name(std::string& new_client_name){
+    std::lock_guard<std::mutex> lock(mtx);
+    if(active && !expired){
+        this->client_name = new_client_name;
+    }
+}
 //---

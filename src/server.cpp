@@ -256,8 +256,9 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
                 else{ //a 3-way handshake has been established: 
                     temp_name = clients.add_client(client_fd);
                     if(temp_name == ""){ //means that the clients list is full...
-                        send_all(client_fd, "ERR PROTOCOL - the server is full!\n", "main");
-                        close(client_fd); //closing the newly open but corrupt socket.
+                        //the assumption is that we always keep a couple of extra blocking sockets in reserve in order to properly notify restricted clients.
+                        send_all(client_fd, "main", clients, "ERR PROTOCOL - the server is full!\n");
+                        close_client_thread(client_fd, temp_name, clients); //closing the newly open but corrupt socket.
                         throw Socket_Exception("'server is full' exception in server.cpp's main for: client_fd=" + std::to_string(client_fd) + ".", errno);
                     } 
                 }
