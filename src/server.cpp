@@ -104,14 +104,14 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
 
         if(argc < 1){ //argc = 1.
             std::cerr << "\n" << std::endl;
-            return close_main(-1);
+            return close_main(1);
         }
         else if(argc < 2){ //argc = 1.
             //both default arguments are applied.
         }
         else if(argc < 3){ //argc = 2.
             std::cerr << "Specify: port, maxclients.\n" << std::endl;
-            return close_main(-1);
+            return close_main(1);
         }
         else if(argc < 4){ //argc = 3.
             prt = std::stoi(argv[1]);
@@ -119,7 +119,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         }
         else{ //3 < argc.
             std::cerr << "Too many arguments specified.\n" << std::endl;
-            return close_main(-1);
+            return close_main(1);
         }
 
         t_clients_list clients(static_cast<size_t>(clients_limit));
@@ -281,15 +281,15 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
     //---
     catch(const Bind_Exception& e){
         close(server_fd);
-        return close_main(-1);
+        return close_main(1);
     }
     catch(const Socket_Exception& e){
         close(server_fd);
-        return close_main(-1);
+        return close_main(1);
     }    
     catch(const Timeout_Exception& e){
         close(server_fd);
-        return close_main(-1);
+        return close_main(1);
     }
     //---
     

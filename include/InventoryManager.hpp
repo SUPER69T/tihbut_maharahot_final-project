@@ -19,7 +19,8 @@ namespace Store{
         std::mutex mtx;
         std::condition_variable cv; 
         std::string listItems(std::vector<Item>& items); //could have also implemented "string_view_literals".
-        static std::atomic<int> total_IMs;
+        static inline std::atomic<int> total_IMs{0}; //:
+        //inline makes it so that we don't have to define total_IMs in the .cpp file aswell. what an annoying language c++ is...
         int IM_Id = 0;
 
         //Private methods:

@@ -12,8 +12,6 @@
 
 namespace Store{
 
-    int total_IMs = 0;
-    
     //Constructors:
     InventoryManager::InventoryManager(){ //empty constructor.
         total_IMs++;
