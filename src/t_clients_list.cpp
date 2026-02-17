@@ -9,7 +9,7 @@ t_clients_list::t_clients_list(const size_t& size) : clients_list(size){ //size-
     std::lock_guard<std::mutex> lock(mtx);
     //assigning - 0 as a default client_fd for each client-pair's first position, and a default name at the second position:
     for(size_t i = 0 ; i < size ; i++){
-        clients_list[i] = std::make_unique<client_info>(0, "client -" + std::to_string(i));
+        clients_list[i] = std::make_unique<client_info>(0, "client-" + std::to_string(i));
     }
 } 
 
@@ -20,7 +20,7 @@ t_clients_list::t_clients_list(std::vector<std::unique_ptr<client_info>> vec, co
             clients_list[i] = std::make_unique<client_info>(vec[i]->fd, vec[i]->name, vec[i]->is_timed_out == true);
         }
         else{
-            clients_list[i] = std::make_unique<client_info>(0, "client -" + std::to_string(i));
+            clients_list[i] = std::make_unique<client_info>(0, "client-" + std::to_string(i));
         }
     }
 }

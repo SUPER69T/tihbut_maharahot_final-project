@@ -51,8 +51,8 @@
 //-
 //-----
 
-//-----
 //Disclaimer:
+//-----
 //gemini did help quite a bit with explaining the:
 //socket creation,
 //multi-threading control,
@@ -69,8 +69,8 @@
 
 
 //just for fun...:
-//essentially acts as a main-closing function, even though it's completely pointless in this project... 
-int close_main(const int& err){ 
+int close_main(const int& err){ //:
+    //this function essentially acts as a main-closing function, even though it's completely pointless in this project... 
     thread_safe_logger::getInstance().log("Closing the server in:");
     std::this_thread::sleep_for(std::chrono::milliseconds(250));
     std::this_thread::sleep_for(std::chrono::milliseconds(250));
@@ -160,7 +160,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         //protocol: 0 = Default Protocol: Because you requested a stream socket over IPv4, the OS defaults to TCP (IPPROTO_TCP).
 
         //timeout initiation:
-        threaded_t_timer timeout_timer(server_fd, "server_MAIN", clients, std::chrono::seconds(30), 200);
+        threaded_t_timer timeout_timer(server_fd, "server_MAIN", clients, std::chrono::seconds(120), 200);
         //
         
         //modified socket behavior to allow immediate reuse of the port(Gemini's implementation...):

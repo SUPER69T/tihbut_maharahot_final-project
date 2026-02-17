@@ -80,6 +80,7 @@ class Network_Exception : public std::runtime_error{
 
     //Helper to handle thread-safe string conversion:
     static std::string format_message(const std::string& msg, const int err){
+        if(err == 0) return msg; //handles custom Network_Exception throwing where we set errno to - 0.
         char buf[256];
         auto result = strerror_r(err, buf, sizeof(buf)); //strerror_r is a thread-safe alternative to strerror.
         //note on strerror_r: returns an int(0/error code) on XSI, returns char*(a pointer to the message) on GNU:

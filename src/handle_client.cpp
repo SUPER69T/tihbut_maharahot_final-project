@@ -398,7 +398,6 @@ void handle_client(const int client_fd, t_clients_list& clients_list, std::strin
             send_all(client_fd, confirmed_name, clients_list, std::string("ERR STATE for - ") + confirmed_name + ": " + e.what() + "\n");
             continue;
         }
-
         if(exit_flag == true) break;
     } 
 
