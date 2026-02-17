@@ -11,7 +11,8 @@
 #include "Item_exception.hpp"
 #include "IM_exception.hpp"
 #include "t_clients_list.hpp"  
-#include "threaded_t_timer.hpp"     
+#include "threaded_t_timer.hpp" 
+#include "thread_safe_logger.hpp"    
 
 //just for fun...:
 void close_client_thread(const int client_fd, const std::string confirmed_name, t_clients_list& clients_list){
@@ -31,11 +32,13 @@ void close_client_thread(const int client_fd, const std::string confirmed_name, 
     send_all(client_fd, confirmed_name, clients_list, "goodbye! <O_O>\n");
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    thread_safe_logger& logger = thread_safe_logger::getInstance();
+    logger.log(confirmed_name + " has released socket - " + std::to_string(client_fd) + ".");
     }
     catch(...){} //(...) = specifies that the catch block catches all the types errors... +
     // + doing nothing with these exception throws since we're in the process of closing the socket connection.
 
-    //normal fd closing:
+    //fd closing:
     //---
     close(client_fd); 
     return; //extra safety.
@@ -182,7 +185,7 @@ void handle_client(const int client_fd, t_clients_list& clients_list, std::strin
 
     //process client-commands:         
     while(true){ //handle_client's terminal-like - loop:
-        try{
+        try{ // -> here we try to catch all of the handle-sided exceptions.
             timeout_timer.reset_timer_or_throw();
             send_all(client_fd, confirmed_name, clients_list, "\033[2J\033[1;1H\n"); //triggering the 'cls' command on the client's screen.
             //*Note on the send_all design: this is an ugly alternative to try-catching every single send_all function call, but that would - 
@@ -407,6 +410,8 @@ void handle_client(const int client_fd, t_clients_list& clients_list, std::strin
     else{
         //killing the whole program as a safety measure(file corruption with the clients list/thrown Socket_Exception...): 
         close(client_fd);
+        thread_safe_logger& logger = thread_safe_logger::getInstance();
+        logger.log("socket - " + std::to_string(client_fd) + " has been hard-shutdown while assigned to - " + confirmed_name + ".");
         return;
         //exit(1); no need to kill the entire program...
     }

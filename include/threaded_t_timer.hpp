@@ -32,7 +32,7 @@ class threaded_t_timer{
         
     public:
     //constructor + destructor:
-    threaded_t_timer(const int fd, const std::string client_name, t_clients_list& clients_list, std::chrono::seconds timeout_seconds, const int check_interval_ms);
+    threaded_t_timer(const int fd, const std::string client_name, t_clients_list& clients_list, const std::chrono::seconds timeout_seconds, const int check_interval_ms);
     ~threaded_t_timer(); //ensures the thread joins/detaches safely.
     //
 

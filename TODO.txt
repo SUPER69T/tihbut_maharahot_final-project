@@ -18,14 +18,9 @@ add a queue(threaded?) to safe_print -(V).
 add time.now() to log messages -(V).
 
 //post-submission improvements:
-finish and implement the Timeout timer -(X).
+finish and implement the Timeout timer -(V).
+
+
+depricated:
 LOGS Command read IM_exception's history exceptions-log -(X).
 MESSAGE Command, an irc between 2 clients -(X).
-
-
-
-
-client main:
-
-
-

@@ -47,6 +47,7 @@
 //don't know why "Store" namespace refuses to be included, instead we're forced into including these two bastards that hate co-operating: 
 #include "Item.hpp"
 #include "InventoryManager.hpp"
+#include "threaded_t_timer.hpp"
 //-
 //-----
 
@@ -68,19 +69,20 @@
 
 
 //just for fun...:
+//essentially acts as a main-closing function, even though it's completely pointless in this project... 
 int close_main(const int& err){ 
     thread_safe_logger::getInstance().log("Closing the server in:");
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
     thread_safe_logger::getInstance().log("3...");
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
     thread_safe_logger::getInstance().log("2...");
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
     thread_safe_logger::getInstance().log("1...\ngoodbye! <O_O>");
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
     return err;
 }
 
@@ -91,16 +93,9 @@ int close_main(const int& err){
 //argc: argument count, argv: argument vector.
 int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]].
 
-    thread_safe_logger& logger = thread_safe_logger::getInstance(); //initialization of the one and only -
-    //singleton - Thread_safe_logger-object instance for the entire program's life-time.
-
     int server_fd;
 
     try{ //the entire main is inside a try block for catching the Timeout_Exception.
-
-        //immediately starting the first timeout timer:
-        /////////threaded_t_timer timer1("main timer", std::chrono::seconds(20), 100); 
-        //
 
         //default aegv parameters:
         int prt = 5555; //could also use - 8080.
@@ -150,7 +145,9 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         Store::InventoryManager inventory(std::move(items_vec)); //initiating an InventoryManager object called "inventory" with the items_vec vector of Item-type objects.
         //-----
 
-        
+        thread_safe_logger& logger = thread_safe_logger::getInstance(); //initialization of the one and only -
+        //singleton - Thread_safe_logger-object instance for the entire program's life-time.
+
         //1: (socket assigning):
         //-----
         server_fd = socket(AF_INET, SOCK_STREAM, 0); //server-File-Descriptor(on linux OS).
@@ -162,7 +159,9 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         //
         //protocol: 0 = Default Protocol: Because you requested a stream socket over IPv4, the OS defaults to TCP (IPPROTO_TCP).
 
-        /////////timer1.reset_timer(); //1
+        //timeout initiation:
+        threaded_t_timer timeout_timer(server_fd, "server_MAIN", clients, std::chrono::seconds(30), 200);
+        //
         
         //modified socket behavior to allow immediate reuse of the port(Gemini's implementation...):
         //-------
@@ -171,7 +170,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         //-------
         //-----
 
-        /////////timer1.reset_timer(); //2
+        timeout_timer.reset_timer_or_throw(); //first timer reset.
 
         //2: (configuring the address):
         //-----
@@ -196,7 +195,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         //(from the CPU's order[Little-Endian in most CPUs{intel/AMD}] to the Network's order[Big-Endian in most IP types{TCP/UDP}]).
         //-----
 
-        /////////timer1.reset_timer(); //3
+        timeout_timer.reset_timer_or_throw(); //2.
 
         //3: (binding to the socket):
         //-----
@@ -225,7 +224,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         }
         //-----
 
-        /////////timer1.reset_timer(); //4
+        timeout_timer.reset_timer_or_throw(); //3.
 
         //4. (listening to clients):
         //-----
@@ -234,14 +233,13 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         logger.log("listening on port - " + std::to_string(prt) + "...");
         //-----
 
-        /////////timer1.reset_timer(); //5
-
         //5. (accepting a connection): 
         //-----
         std::string temp_name = "";
         //acceptting and handling a client's connection:
         while(true){
-            try{ // -> here we try to catch both the accept + thread, and the handle_client exceptions.
+            try{ // -> here we try to catch both the accept + thread exceptions(server-sided exceptions).
+                timeout_timer.reset_timer_or_throw(); //4th reset + resetting on each loop...
                 //accepting a new client's connection:
                 const int client_fd = accept(server_fd, nullptr, nullptr); //each new socket connection established removes that - 
                 //"in-progress" object from the "backlog" queue initialized inside the "listen" operation, allowing new in-progress connections to enter that queue. 
@@ -259,15 +257,16 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
                         //the assumption is that we always keep a couple of extra blocking sockets in reserve in order to properly notify restricted clients.
                         send_all(client_fd, "main", clients, "ERR PROTOCOL - the server is full!\n");
                         close_client_thread(client_fd, temp_name, clients); //closing the newly open but corrupt socket.
-                        throw Socket_Exception("'server is full' exception in server.cpp's main for: client_fd=" + std::to_string(client_fd) + ".", errno);
+                        throw Socket_Exception("'server is full' exception in server.cpp's main on fd - " + std::to_string(client_fd) + ".", errno);
                     } 
                 }
-                //Creating a new thread in order to handle each client as concurrent processes:
+                //creating a new thread in order to handle each client as concurrent processes:
                 std::thread(handle_client, client_fd, std::ref(clients), temp_name, std::ref(inventory)).detach(); //(sending inventory by reference...).
                 //*Note - this type of manual socket-opening technique we use here is called "Blocking-socket opening".
                 //the reason it is discouraged(compared to non-Blocking alternatives like using select()/poll()/epoll()) is because - 
                 //every operation we do on a single socket(read/write...) haults the entire thread it occupies, thus enabling only the creation of - 
                 //a single socket on each thread, making it much slower and inefficient for robust programs with many clients to handle concurrently.
+                logger.log(temp_name + " has been assigned to socket - " + std::to_string(client_fd) + ".");
             } 
             catch(const Socket_Exception& e){ //most likely recoverable:
                 continue; 

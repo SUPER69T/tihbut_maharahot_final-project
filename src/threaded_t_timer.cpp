@@ -10,7 +10,7 @@
 //constructor:
 //---
 //launching a background thread that runs in parralel to the caller:
-threaded_t_timer::threaded_t_timer(const int fd, const std::string client_name, t_clients_list& clients_list, std::chrono::seconds timeout_seconds, const int check_interval_ms)
+threaded_t_timer::threaded_t_timer(const int fd, const std::string client_name, t_clients_list& clients_list, const std::chrono::seconds timeout_seconds, const int check_interval_ms)
     : fd(fd), client_name(client_name),
     clients_list(clients_list), 
     //assigning default timeout and interval:
