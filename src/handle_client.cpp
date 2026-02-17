@@ -259,6 +259,7 @@ void handle_client(const int client_fd, t_clients_list& clients_list, std::strin
                         //
                         is_authenticated = true; //the user is valid.
                         confirmed_name = arg;
+                        timeout_timer.update_name(confirmed_name);
                         send_all(client_fd, confirmed_name, clients_list, "OK HELLO, " + confirmed_name +"!\n");
                         continue;
                         //
@@ -401,7 +402,6 @@ void handle_client(const int client_fd, t_clients_list& clients_list, std::strin
     bool removed_safely = clients_list.remove_client(client_fd);
     //healthy closing the connection:
     if(!socket_err && removed_safely){ //removing the client from the threaded-clients list.
-        timeout_timer.reset_timer_or_throw();
         close_client_thread(client_fd, confirmed_name, clients_list); //normal thread exit.
     }
     else{
