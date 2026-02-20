@@ -47,7 +47,7 @@
 //don't know why "Store" namespace refuses to be included, instead we're forced into including these two bastards that hate co-operating: 
 #include "Item.hpp"
 #include "InventoryManager.hpp"
-#include "threaded_t_timer.hpp"
+//#include "threaded_t_timer.hpp" //too tired of this project to implement here but the idea is clear...
 //-
 //-----
 
@@ -160,7 +160,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         //protocol: 0 = Default Protocol: Because you requested a stream socket over IPv4, the OS defaults to TCP (IPPROTO_TCP).
 
         //timeout initiation:
-        threaded_t_timer timeout_timer(server_fd, "server_MAIN", clients, std::chrono::seconds(120), 200);
+        //threaded_t_timer timeout_timer(server_fd, "server_MAIN", clients, std::chrono::seconds(120), 200);
         //
         
         //modified socket behavior to allow immediate reuse of the port(Gemini's implementation...):
@@ -170,7 +170,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         //-------
         //-----
 
-        timeout_timer.reset_timer_or_throw(); //first timer reset.
+        //timeout_timer.reset_timer_or_throw(); //first timer reset.
 
         //2: (configuring the address):
         //-----
@@ -195,7 +195,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         //(from the CPU's order[Little-Endian in most CPUs{intel/AMD}] to the Network's order[Big-Endian in most IP types{TCP/UDP}]).
         //-----
 
-        timeout_timer.reset_timer_or_throw(); //2.
+        //timeout_timer.reset_timer_or_throw(); //2.
 
         //3: (binding to the socket):
         //-----
@@ -224,7 +224,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         }
         //-----
 
-        timeout_timer.reset_timer_or_throw(); //3.
+        //timeout_timer.reset_timer_or_throw(); //3.
 
         //4. (listening to clients):
         //-----
@@ -239,7 +239,7 @@ int main(int argc, char *argv[]){ //argv[program_path[0], Port[1], maxclients[2]
         //acceptting and handling a client's connection:
         while(true){
             try{ // -> here we try to catch both the accept + thread exceptions(server-sided exceptions).
-                timeout_timer.reset_timer_or_throw(); //4th reset + resetting on each loop...
+                //timeout_timer.reset_timer_or_throw(); //4th reset + resetting on each loop...
                 //accepting a new client's connection:
                 const int client_fd = accept(server_fd, nullptr, nullptr); //each new socket connection established removes that - 
                 //"in-progress" object from the "backlog" queue initialized inside the "listen" operation, allowing new in-progress connections to enter that queue. 
